@@ -12,6 +12,7 @@ type SessionsRepo interface {
 	GetByID(id string) (*entity.Sessions, error)
 	GetByIdUser(id string) (*entity.Sessions, error)
 	List() ([]*entity.Sessions, error)
+	ListPage(limit, offset int) ([]*entity.Sessions, error) // pagination
 	Update(u *entity.Sessions) error
 	Delete(id string) error
 }
@@ -53,6 +54,23 @@ func (r *GormSessionsRepo) GetByIdUser(id string) (*entity.Sessions, error) {
 func (r *GormSessionsRepo) List() ([]*entity.Sessions, error) {
 	var out []*entity.Sessions
 	if err := r.db.Where("is_deleted = ?", false).Find(&out).Error; err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r *GormSessionsRepo) ListPage(limit, offset int) ([]*entity.Sessions, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	var out []*entity.Sessions
+	if err := r.db.Where("is_deleted = ?", false).Limit(limit).Offset(offset).Find(&out).Error; err != nil {
 		return nil, err
 	}
 	return out, nil

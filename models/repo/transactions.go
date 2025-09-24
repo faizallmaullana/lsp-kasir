@@ -11,6 +11,7 @@ type TransactionsRepo interface {
 	Create(u *entity.Transactions) error
 	GetByID(id string) (*entity.Transactions, error)
 	List() ([]*entity.Transactions, error)
+	ListPage(limit, offset int) ([]*entity.Transactions, error) // pagination
 	Update(u *entity.Transactions) error
 	Delete(id string) error
 }
@@ -41,6 +42,23 @@ func (r *GormTransactionsRepo) GetByID(id string) (*entity.Transactions, error) 
 func (r *GormTransactionsRepo) List() ([]*entity.Transactions, error) {
 	var out []*entity.Transactions
 	if err := r.db.Where("is_deleted = ?", false).Find(&out).Error; err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r *GormTransactionsRepo) ListPage(limit, offset int) ([]*entity.Transactions, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	var out []*entity.Transactions
+	if err := r.db.Where("is_deleted = ?", false).Limit(limit).Offset(offset).Find(&out).Error; err != nil {
 		return nil, err
 	}
 	return out, nil

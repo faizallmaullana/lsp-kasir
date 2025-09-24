@@ -10,6 +10,7 @@ import (
 type ProfilesService interface {
 	Create(p *entity.Profiles) (*entity.Profiles, error)
 	GetAll() ([]entity.Profiles, error)
+	GetAllPaginated(limit, page int) ([]entity.Profiles, error)
 	GetByID(id string) (*entity.Profiles, error)
 	Update(id string, p *entity.Profiles) (*entity.Profiles, error)
 	Delete(id string) error
@@ -35,6 +36,28 @@ func (s *profilesService) Create(p *entity.Profiles) (*entity.Profiles, error) {
 
 func (s *profilesService) GetAll() ([]entity.Profiles, error) {
 	list, err := s.profile.List()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]entity.Profiles, 0, len(list))
+	for _, p := range list {
+		out = append(out, *p)
+	}
+	return out, nil
+}
+
+func (s *profilesService) GetAllPaginated(limit, page int) ([]entity.Profiles, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if page <= 0 {
+		page = 1
+	}
+	offset := (page - 1) * limit
+	list, err := s.profile.ListPage(limit, offset)
 	if err != nil {
 		return nil, err
 	}

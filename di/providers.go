@@ -34,6 +34,10 @@ func ProvideDB(env *conf.Config) *gorm.DB { return env.DB }
 func ProvideUsersRepo(db *gorm.DB) repo.UsersRepo       { return repo.NewGormUsersRepo(db) }
 func ProvideProfilesRepo(db *gorm.DB) repo.ProfilesRepo { return repo.NewGormProfilesRepo(db) }
 func ProvideSessionsRepo(db *gorm.DB) repo.SessionsRepo { return repo.NewGormSessionsRepo(db) }
+func ProvideItemsRepo(db *gorm.DB) repo.ItemsRepo       { return repo.NewGormItemsRepo(db) }
+func ProvideTransactionsRepo(db *gorm.DB) repo.TransactionsRepo {
+	return repo.NewGormTransactionsRepo(db)
+}
 
 // Services
 // Service providers (currently only authentication is used)
@@ -48,6 +52,12 @@ func ProvideSessionService(r repo.SessionsRepo) services.SessionService {
 func ProvideUsersService(r repo.UsersRepo) services.UsersService { return services.NewUsersService(r) }
 func ProvideProfilesService(r repo.ProfilesRepo) services.ProfilesService {
 	return services.NewProfilesService(r)
+}
+func ProvideItemsService(r repo.ItemsRepo) services.ItemsService {
+	return services.NewItemsService(r)
+}
+func ProvideTransactionsService(r repo.TransactionsRepo) services.TransactionsService {
+	return services.NewTransactionsService(r)
 }
 
 // Handlers
@@ -77,8 +87,8 @@ func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.User
 // Wire provider sets (grouped for cleaner injector definitions)
 var (
 	ConfigSet  = wire.NewSet(ProvideEnvConfig, ProvideDB)
-	RepoSet    = wire.NewSet(ProvideUsersRepo, ProvideProfilesRepo, ProvideSessionsRepo)
-	ServiceSet = wire.NewSet(ProvideAuthenticationService, ProvideSessionService, ProvideUsersService, ProvideProfilesService)
+	RepoSet    = wire.NewSet(ProvideUsersRepo, ProvideProfilesRepo, ProvideSessionsRepo, ProvideItemsRepo, ProvideTransactionsRepo)
+	ServiceSet = wire.NewSet(ProvideAuthenticationService, ProvideSessionService, ProvideUsersService, ProvideProfilesService, ProvideItemsService, ProvideTransactionsService)
 	HandlerSet = wire.NewSet(ProvideAuthenticationHandler, ProvideUsersHandler)
 	RouterSet  = wire.NewSet(ProvideRouterWithRoutes)
 	ServerSet  = wire.NewSet(ProvideHTTPServer)

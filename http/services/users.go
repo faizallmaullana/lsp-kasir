@@ -11,7 +11,7 @@ import (
 
 type UsersService interface {
 	Create(u *entity.Users) (*entity.Users, error)
-	GetAll() ([]entity.Users, error)
+	GetAll(count, page int) ([]entity.Users, error)
 	GetByID(id string) (*entity.Users, error)
 	GetByEmail(email string) (*entity.Users, error)
 	Update(id string, u *entity.Users) (*entity.Users, error)
@@ -35,37 +35,25 @@ func (s *usersService) Create(u *entity.Users) (*entity.Users, error) {
 }
 
 // GetAll returns a list of users.
-func (s *usersService) GetAll() ([]entity.Users, error) {
-	list, err := s.users.List()
+func (s *usersService) GetAll(count, page int) ([]entity.Users, error) {
+	if count <= 0 {
+		count = 10
+	}
+	if count > 100 {
+		count = 100 
+	}
+	if page <= 0 {
+		page = 1
+	}
+	offset := (page - 1) * count
+
+	list, err := s.users.ListPage(count, offset)
 	if err != nil {
 		return nil, err
 	}
-
-	// Simple pagination: return first page by default.
-	// TODO: accept page/limit parameters (via function args, context, or caller config).
-	const (
-		defaultPage  = 1
-		defaultLimit = 10
-	)
-
-	page := defaultPage
-	limit := defaultLimit
-
-	// calculate slice bounds
-	start := (page - 1) * limit
-	if start >= len(list) {
-		// no results on this page
-		return []entity.Users{}, nil
-	}
-	end := start + limit
-	if end > len(list) {
-		end = len(list)
-	}
-
-	// convert []*entity.Users to []entity.Users for interface contract
-	out := make([]entity.Users, 0, end-start)
-	for _, p := range list[start:end] {
-		out = append(out, *p)
+	out := make([]entity.Users, 0, len(list))
+	for _, u := range list {
+		out = append(out, *u)
 	}
 	return out, nil
 }

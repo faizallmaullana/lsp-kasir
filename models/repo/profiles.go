@@ -11,6 +11,7 @@ type ProfilesRepo interface {
 	Create(u *entity.Profiles) error
 	GetByID(id string) (*entity.Profiles, error)
 	List() ([]*entity.Profiles, error)
+	ListPage(limit, offset int) ([]*entity.Profiles, error) // pagination
 	Update(u *entity.Profiles) error
 	Delete(id string) error
 }
@@ -46,16 +47,27 @@ func (r *GormProfilesRepo) List() ([]*entity.Profiles, error) {
 	return out, nil
 }
 
-func (r *GormProfilesRepo) Update(u *entity.Profiles) error {
-	if err := r.db.Model(&entity.Profiles{}).Where("id_profile = ?", u.IdProfile).Updates(u).Error; err != nil {
-		return err
+func (r *GormProfilesRepo) ListPage(limit, offset int) ([]*entity.Profiles, error) {
+	if limit <= 0 {
+		limit = 10
 	}
-	return nil
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	var out []*entity.Profiles
+	if err := r.db.Where("is_deleted = ?", false).Limit(limit).Offset(offset).Find(&out).Error; err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r *GormProfilesRepo) Update(u *entity.Profiles) error {
+	return r.db.Model(&entity.Profiles{}).Where("id_profile = ?", u.IdProfile).Updates(u).Error
 }
 
 func (r *GormProfilesRepo) Delete(id string) error {
-	if err := r.db.Model(&entity.Profiles{}).Where("id_profile = ?", id).Update("is_deleted", true).Error; err != nil {
-		return err
-	}
-	return nil
+	return r.db.Model(&entity.Profiles{}).Where("id_profile = ?", id).Update("is_deleted", true).Error
 }

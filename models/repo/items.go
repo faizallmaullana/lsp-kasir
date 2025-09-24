@@ -11,8 +11,9 @@ type ItemsRepo interface {
 	Create(u *entity.Items) error
 	GetByID(id string) (*entity.Items, error)
 	List() ([]*entity.Items, error)
+	ListPage(limit, offset int) ([]*entity.Items, error) // new pagination method
 	Update(u *entity.Items) error
-	Delete(id string) error
+	Delete(id string) error // soft delete
 }
 
 type GormItemsRepo struct {
@@ -46,16 +47,28 @@ func (r *GormItemsRepo) List() ([]*entity.Items, error) {
 	return out, nil
 }
 
-func (r *GormItemsRepo) Update(u *entity.Items) error {
-	if err := r.db.Model(&entity.Items{}).Where("id_item = ?", u.IdItem).Updates(u).Error; err != nil {
-		return err
+func (r *GormItemsRepo) ListPage(limit, offset int) ([]*entity.Items, error) {
+	if limit <= 0 {
+		limit = 10
 	}
-	return nil
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	var out []*entity.Items
+	if err := r.db.Where("is_deleted = ?", false).Limit(limit).Offset(offset).Find(&out).Error; err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r *GormItemsRepo) Update(u *entity.Items) error {
+	return r.db.Model(&entity.Items{}).Where("id_item = ?", u.IdItem).Updates(u).Error
 }
 
 func (r *GormItemsRepo) Delete(id string) error {
-	if err := r.db.Model(&entity.Items{}).Where("id_item = ?", id).Update("isdeleted", true).Error; err != nil {
-		return err
-	}
-	return nil
+	// soft delete: set is_deleted = true (fixed column name)
+	return r.db.Model(&entity.Items{}).Where("id_item = ?", id).Update("is_deleted", true).Error
 }

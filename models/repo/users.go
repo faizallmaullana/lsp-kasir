@@ -13,7 +13,8 @@ type UsersRepo interface {
 	Create(u *entity.Users) error
 	GetByID(id string) (*entity.Users, error)
 	GetByEmail(email string) (*entity.Users, error)
-	List(page, perPage int) ([]*entity.Users, int64, error)
+	List() ([]*entity.Users, error)
+	ListPage(limit, offset int) ([]*entity.Users, error) // new: paginated list
 	Update(u *entity.Users) error
 	Delete(id string) error
 }
@@ -33,7 +34,7 @@ func (r *GormUsersRepo) Create(u *entity.Users) error {
 
 func (r *GormUsersRepo) GetByID(id string) (*entity.Users, error) {
 	var u entity.Users
-	if err := r.db.First(&u, "id_user = ? AND is_deleted = ?", id, false).Error; err != nil {
+	if err := r.db.First(&u, "id_user = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("not found")
 		}
@@ -44,7 +45,7 @@ func (r *GormUsersRepo) GetByID(id string) (*entity.Users, error) {
 
 func (r *GormUsersRepo) GetByEmail(email string) (*entity.Users, error) {
 	var u entity.Users
-	if err := r.db.First(&u, "email = ? AND is_deleted = ?", email, false).Error; err != nil {
+	if err := r.db.First(&u, "email = ?", email).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("not found")
 		}
@@ -53,42 +54,35 @@ func (r *GormUsersRepo) GetByEmail(email string) (*entity.Users, error) {
 	return &u, nil
 }
 
-func (r *GormUsersRepo) List(page, perPage int) ([]*entity.Users, int64, error) {
-	if page < 1 {
-		page = 1
-	}
-	if perPage <= 0 {
-		perPage = 10
-	}
-
+func (r *GormUsersRepo) List() ([]*entity.Users, error) {
 	var out []*entity.Users
-	var total int64
-
-	q := r.db.Model(&entity.Users{}).Where("is_deleted = ?", false)
-
-	if err := q.Count(&total).Error; err != nil {
-		return nil, 0, err
+	if err := r.db.Find(&out).Error; err != nil {
+		return nil, err
 	}
+	return out, nil
+}
 
-	offset := (page - 1) * perPage
-	if err := q.Limit(perPage).Offset(offset).Find(&out).Error; err != nil {
-		return nil, 0, err
+func (r *GormUsersRepo) ListPage(limit, offset int) ([]*entity.Users, error) {
+	if limit <= 0 {
+		limit = 10
 	}
-
-	totalPages := (total + int64(perPage) - 1) / int64(perPage)
-	return out, totalPages, nil
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	var out []*entity.Users
+	if err := r.db.Limit(limit).Offset(offset).Find(&out).Error; err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (r *GormUsersRepo) Update(u *entity.Users) error {
-	if err := r.db.Model(&entity.Users{}).Where("id_user = ?", u.IdUser).Updates(u).Error; err != nil {
-		return err
-	}
-	return nil
+	return r.db.Model(&entity.Users{}).Where("id_user = ?", u.IdUser).Updates(u).Error
 }
 
 func (r *GormUsersRepo) Delete(id string) error {
-	if err := r.db.Model(&entity.Users{}).Where("id_user = ?", id).Update("is_deleted", true).Error; err != nil {
-		return err
-	}
-	return nil
+	return r.db.Delete(&entity.Users{}, "id_user = ?", id).Error
 }
