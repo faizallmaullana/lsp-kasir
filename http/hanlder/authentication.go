@@ -23,7 +23,9 @@ func NewAuthenticationHandler(s services.AuthenticationService, sess services.Se
 	return &AuthenticationHandler{svc: s, sess: sess, cfg: cfg}
 }
 
-func (h *AuthenticationHandler) Register(rg *gin.RouterGroup) {
+func (h *AuthenticationHandler) Register(r *gin.RouterGroup) {
+	rg := r.Group("/auth")
+
 	rg.POST("/login", middleware.LoginRateLimiter(), h.login)
 	rg.POST("/refresh", middleware.JWTMiddleware(h.cfg), h.refresh)
 }
