@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"faizalmaulana/lsp/conf"
-	"faizalmaulana/lsp/dto"
 	"faizalmaulana/lsp/helper"
+	"faizalmaulana/lsp/http/dto"
+	"faizalmaulana/lsp/http/middleware"
 	"faizalmaulana/lsp/http/services"
-	"faizalmaulana/lsp/middleware"
 	"faizalmaulana/lsp/models/entity"
 
 	"github.com/gin-gonic/gin"

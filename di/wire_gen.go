@@ -27,7 +27,13 @@ func InitializeApp() *App {
 	profilesService := ProvideProfilesService(profilesRepo)
 	usersService := ProvideUsersService(usersRepo)
 	usersHandler := ProvideUsersHandler(config, profilesService, usersService)
-	engine := ProvideRouterWithRoutes(authenticationHandler, usersHandler)
+	itemsRepo := ProvideItemsRepo(db)
+	itemsService := ProvideItemsService(itemsRepo)
+	itemsHandler := ProvideItemsHandler(config, itemsService)
+	transactionsRepo := ProvideTransactionsRepo(db)
+	transactionsService := ProvideTransactionsService(transactionsRepo)
+	reportHandler := ProvideReportHandler(config, transactionsService)
+	engine := ProvideRouterWithRoutes(authenticationHandler, usersHandler, itemsHandler, reportHandler)
 	server := ProvideHTTPServer(config, engine)
 	app := &App{
 		Server: server,

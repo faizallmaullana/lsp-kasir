@@ -6,8 +6,8 @@ import (
 
 	"faizalmaulana/lsp/conf"
 	handler "faizalmaulana/lsp/http/hanlder"
+	"faizalmaulana/lsp/http/middleware"
 	"faizalmaulana/lsp/http/services"
-	"faizalmaulana/lsp/middleware"
 	"faizalmaulana/lsp/models/repo"
 
 	"github.com/gin-gonic/gin"
@@ -70,13 +70,23 @@ func ProvideUsersHandler(cfg *conf.Config, profile services.ProfilesService, use
 	return handler.NewUsersHandler(cfg, profile, users)
 }
 
+func ProvideItemsHandler(cfg *conf.Config, items services.ItemsService) *handler.ItemsHandler {
+	return handler.NewItemsHandler(cfg, items)
+}
+
+func ProvideReportHandler(cfg *conf.Config, tx services.TransactionsService) *handler.ReportHandler {
+	return handler.NewReportHandler(cfg, tx)
+}
+
 // Register routes on the router
 // ProvideRouterWithRoutes builds the router and registers routes (single *gin.Engine provider).
-func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.UsersHandler) *gin.Engine {
+func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.UsersHandler, ih *handler.ItemsHandler, rh *handler.ReportHandler) *gin.Engine {
 	r := ProvideRouter()
 	api := r.Group("/api")
 	ah.Register(api)
 	uh.Register(api)
+	ih.Register(api)
+	rh.Register(api)
 
 	for _, rt := range r.Routes() {
 		log.Printf("route: %s %s", rt.Method, rt.Path)
@@ -89,7 +99,7 @@ var (
 	ConfigSet  = wire.NewSet(ProvideEnvConfig, ProvideDB)
 	RepoSet    = wire.NewSet(ProvideUsersRepo, ProvideProfilesRepo, ProvideSessionsRepo, ProvideItemsRepo, ProvideTransactionsRepo)
 	ServiceSet = wire.NewSet(ProvideAuthenticationService, ProvideSessionService, ProvideUsersService, ProvideProfilesService, ProvideItemsService, ProvideTransactionsService)
-	HandlerSet = wire.NewSet(ProvideAuthenticationHandler, ProvideUsersHandler)
+	HandlerSet = wire.NewSet(ProvideAuthenticationHandler, ProvideUsersHandler, ProvideItemsHandler, ProvideReportHandler)
 	RouterSet  = wire.NewSet(ProvideRouterWithRoutes)
 	ServerSet  = wire.NewSet(ProvideHTTPServer)
 )
