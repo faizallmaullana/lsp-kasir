@@ -13,6 +13,7 @@ import (
 	"faizalmaulana/lsp/models/repo"
 
 	"github.com/gin-gonic/gin"
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 type TransactionsHandler struct {
@@ -98,8 +99,13 @@ func (h *TransactionsHandler) create(c *gin.Context) {
 
 	userID := ""
 	if v, ok := c.Get("claims"); ok {
-		if m, ok := v.(map[string]any); ok {
-			if sub, ok := m["sub"].(string); ok {
+		switch claims := v.(type) {
+		case jwt.MapClaims:
+			if sub, ok := claims["sub"].(string); ok {
+				userID = sub
+			}
+		case map[string]any:
+			if sub, ok := claims["sub"].(string); ok {
 				userID = sub
 			}
 		}

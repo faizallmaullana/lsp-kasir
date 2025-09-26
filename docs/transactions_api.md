@@ -3,7 +3,7 @@
 ## Overview
 The Transactions API provides endpoints to manage cashier transactions, including listing, retrieving, creating, updating, and deleting transactions, as well as their purchased items (pivot rows).
 
-- Totals are calculated on the server based on item price × quantity.
+- Totals are calculated on the server at purchase time based on the current item price × quantity, and the unit price is snapshotted into the pivot rows.
 - Create/Update/Delete require JWT authentication.
 
 ## Base URL
@@ -177,6 +177,13 @@ Responses
   "ERROR": "items required"
 }
 ```
+Or when an item id doesn't exist:
+```json
+{
+  "STATUS": "BAD_REQUEST",
+  "ERROR": "invalid item: <id_item>"
+}
+```
 - 401 Unauthorized
 ```json
 {
@@ -188,6 +195,13 @@ Responses
 {
   "STATUS": "INTERNAL_SERVER_ERROR",
   "ERROR": "failed to create transaction"
+}
+```
+Or when saving purchased items fails:
+```json
+{
+  "STATUS": "INTERNAL_SERVER_ERROR",
+  "ERROR": "failed to save items"
 }
 ```
 
@@ -321,11 +335,12 @@ Transaction Item (Pivot)
 ```
 
 ## Notes & Constraints
-- `total_price` is computed by the server as Σ(quantity × current item price).
+- `total_price` is computed by the server as Σ(quantity × current item price) at the time of purchase, and each pivot row stores the unit price used.
 - `quantity` must be >= 1; if omitted or <= 0, it defaults to 1.
 - Soft delete is used; records are not physically removed.
-- Pagination limit is capped at 100.
+- Pagination defaults to 10 items per page and is capped at 100 per request.
 - Create/Update/Delete require a valid JWT in the `Authorization` header.
+- The `id_user` of a transaction is taken from the JWT claims (`sub`).
 
 ## Examples
 
