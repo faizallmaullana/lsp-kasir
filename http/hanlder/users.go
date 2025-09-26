@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"strings"
 	"net/http"
 
 	"faizalmaulana/lsp/conf"
@@ -12,6 +13,7 @@ import (
 	"faizalmaulana/lsp/models/entity"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
@@ -33,8 +35,93 @@ func (h *UsersHandler) Register(rr *gin.RouterGroup) {
 	rg.PUT("/:id", middleware.JWTMiddleware(h.cfg), h.updateProfile)
 	rg.DELETE("/:id", middleware.JWTMiddleware(h.cfg), h.deleteProfile)
 	rg.PUT("/email", middleware.JWTMiddleware(h.cfg), h.updateEmail)
+
+	// Admin-only user management
+	ug := rr.Group("/users")
+	ug.POST("", middleware.JWTMiddleware(h.cfg), h.createUserWithProfileAdmin)
 }
 
+// createUserWithProfileAdmin allows admin to create a new user along with a primary profile
+// Body: { email, password, role(optional), profile: { name, contact, address, image_url } }
+func (h *UsersHandler) createUserWithProfileAdmin(c *gin.Context) {
+	// Auth + role check
+	claimsVal, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
+		return
+	}
+	claims, ok := claimsVal.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
+		return
+	}
+	roleStr, _ := claims["role"].(string)
+	if strings.ToLower(roleStr) != "admin" {
+		// treat as unauthorized for now (no dedicated Forbidden helper)
+		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
+		return
+	}
+
+	var req dto.CreateUserWithProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, helper.BadRequestResponse(err.Error()))
+		return
+	}
+	setRole := req.Role
+	if strings.TrimSpace(setRole) == "" {
+		setRole = "cashier"
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to hash password"))
+		return
+	}
+
+	// Create user
+	uid := helper.Uuid()
+	u := &entity.Users{
+		IdUser:   uid,
+		Email:    req.Email,
+		Password: string(hashed),
+		Role:     setRole,
+	}
+	createdUser, err := h.Users.Create(u)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to create user"))
+		return
+	}
+
+	// Create profile
+	prof := &entity.Profiles{
+		IdProfile: helper.Uuid(),
+		IdUser:    createdUser.IdUser,
+		Name:      req.Profile.Name,
+		Contact:   req.Profile.Contact,
+		Address:   req.Profile.Address,
+		ImageUrl:  req.Profile.ImageUrl,
+	}
+	createdProfile, err := h.profile.Create(prof)
+	if err != nil {
+		// best-effort rollback user creation
+		_ = h.Users.Delete(createdUser.IdUser)
+		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to create profile"))
+		return
+	}
+
+	// Build safe response (omit password)
+	resp := gin.H{
+		"user": gin.H{
+			"id_user":    createdUser.IdUser,
+			"email":      createdUser.Email,
+			"role":       createdUser.Role,
+			"is_deleted": createdUser.IsDeleted,
+			"timestamp":  createdUser.Timestamp,
+		},
+		"profile": createdProfile,
+	}
+	c.JSON(http.StatusCreated, helper.SuccessResponse("created", resp))
+}
 func (h *UsersHandler) getUserIDFromClaims(c *gin.Context) (string, bool) {
 	claimsVal, exists := c.Get("claims")
 	if !exists {

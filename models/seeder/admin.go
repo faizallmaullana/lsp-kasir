@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SeedAdmin(users repo.UsersRepo) error {
+func SeedAdmin(users repo.UsersRepo, profiles repo.ProfilesRepo) error {
 	_, err := users.GetByEmail("mail@paisaltanjung.my.id")
 	if err == nil {
 		return nil
@@ -31,6 +31,17 @@ func SeedAdmin(users repo.UsersRepo) error {
 	}
 
 	if err := users.Create(u); err != nil {
+
+	}
+
+	// Create default admin profile
+	p := &entity.Profiles{
+		IdProfile: helper.Uuid(),
+		IdUser:    u.IdUser,
+		Name:      "Administrator",
+		Timestamp: time.Now(),
+	}
+	if err := profiles.Create(p); err != nil {
 		return err
 	}
 	return nil

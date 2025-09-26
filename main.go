@@ -24,7 +24,8 @@ func main() {
 	if *seedFlag {
 		cfg := conf.NewEnvConfig()
 		usersRepo := repo.NewGormUsersRepo(cfg.DB)
-		if err := seeder.RunAll(usersRepo); err != nil {
+		profilesRepo := repo.NewGormProfilesRepo(cfg.DB)
+		if err := seeder.RunAll(usersRepo, profilesRepo); err != nil {
 			log.Fatalf("seeding failed: %v", err)
 		}
 		log.Println("seeding completed")
