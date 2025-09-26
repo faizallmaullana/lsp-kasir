@@ -9,7 +9,6 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-// GenerateToken creates a signed JWT for the given user information using values from Config.
 func GenerateToken(cfg *conf.Config, userID, sessionId, username, role string) (string, error) {
 	secret := cfg.JWTSecret
 	if secret == "" {

@@ -11,7 +11,7 @@ type TransactionsRepo interface {
 	Create(u *entity.Transactions) error
 	GetByID(id string) (*entity.Transactions, error)
 	List() ([]*entity.Transactions, error)
-	ListPage(limit, offset int) ([]*entity.Transactions, error) // pagination
+	ListPage(limit, offset int) ([]*entity.Transactions, error)
 	Update(u *entity.Transactions) error
 	Delete(id string) error
 }

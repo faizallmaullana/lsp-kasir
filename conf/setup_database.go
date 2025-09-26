@@ -13,11 +13,9 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// SetupDatabaseConnection creates a GORM DB connection and runs automigrations for entities.
 func SetupDatabaseConnection(dbHost, dbPort, dbUser, dbPass, dbName string) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", dbHost, dbUser, dbPass, dbName, dbPort)
 
-	// Use a simple logger in non-production
 	gormLogger := logger.Default
 	if os.Getenv("GIN_MODE") == "release" {
 		gormLogger = logger.Default.LogMode(logger.Silent)
@@ -30,7 +28,6 @@ func SetupDatabaseConnection(dbHost, dbPort, dbUser, dbPass, dbName string) *gor
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	// run auto migrations for our entities
 	if err := db.AutoMigrate(
 		&entity.Users{},
 		&entity.Sessions{},
@@ -42,7 +39,6 @@ func SetupDatabaseConnection(dbHost, dbPort, dbUser, dbPass, dbName string) *gor
 		log.Fatalf("auto migrate failed: %v", err)
 	}
 
-	// configure connection pool
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("failed to get sql.DB: %v", err)
@@ -54,7 +50,6 @@ func SetupDatabaseConnection(dbHost, dbPort, dbUser, dbPass, dbName string) *gor
 	return db
 }
 
-// CloseDatabaseConnection closes the underlying sql.DB connection pool.
 func CloseDatabaseConnection(db *gorm.DB) {
 	if db == nil {
 		return

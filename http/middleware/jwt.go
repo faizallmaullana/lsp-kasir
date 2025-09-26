@@ -12,8 +12,6 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-// JWTMiddleware returns a Gin middleware that validates the Authorization Bearer token
-// and attaches the token claims to the request context under the key "claims".
 func JWTMiddleware(cfg *conf.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")
@@ -64,7 +62,6 @@ func JWTMiddleware(cfg *conf.Config) gin.HandlerFunc {
 		fmt.Println("JWT Claims:", token.Claims)
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			// store claims in context for downstream handlers
 			c.Set("claims", claims)
 		}
 

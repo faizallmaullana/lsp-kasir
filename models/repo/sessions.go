@@ -12,7 +12,7 @@ type SessionsRepo interface {
 	GetByID(id string) (*entity.Sessions, error)
 	GetByIdUser(id string) (*entity.Sessions, error)
 	List() ([]*entity.Sessions, error)
-	ListPage(limit, offset int) ([]*entity.Sessions, error) // pagination
+	ListPage(limit, offset int) ([]*entity.Sessions, error)
 	Update(u *entity.Sessions) error
 	Delete(id string) error
 }

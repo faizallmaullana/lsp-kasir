@@ -114,7 +114,6 @@ func (h *UsersHandler) updateProfile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, helper.BadRequestResponse(err.Error()))
 		return
 	}
-	// fetch existing
 	existing, err := h.profile.GetByID(id)
 	if err != nil || existing.IdUser != userID {
 		c.JSON(http.StatusNotFound, helper.NotFoundResponse("profile not found"))

@@ -8,18 +8,16 @@ import (
 	"gorm.io/gorm"
 )
 
-// UsersRepo defines CRUD for users
 type UsersRepo interface {
 	Create(u *entity.Users) error
 	GetByID(id string) (*entity.Users, error)
 	GetByEmail(email string) (*entity.Users, error)
 	List() ([]*entity.Users, error)
-	ListPage(limit, offset int) ([]*entity.Users, error) // new: paginated list
+	ListPage(limit, offset int) ([]*entity.Users, error) 
 	Update(u *entity.Users) error
 	Delete(id string) error
 }
 
-// GormUsersRepo is a GORM implementation of UsersRepo
 type GormUsersRepo struct {
 	db *gorm.DB
 }

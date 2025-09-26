@@ -11,10 +11,10 @@ type ItemsRepo interface {
 	Create(u *entity.Items) error
 	GetByID(id string) (*entity.Items, error)
 	List() ([]*entity.Items, error)
-	ListPage(limit, offset int) ([]*entity.Items, error) // new pagination method
+	ListPage(limit, offset int) ([]*entity.Items, error) 
 	ListPageByType(limit, offset int, itemType string) ([]*entity.Items, error)
 	Update(u *entity.Items) error
-	Delete(id string) error // soft delete
+	Delete(id string) error 
 }
 
 type GormItemsRepo struct {
@@ -91,6 +91,5 @@ func (r *GormItemsRepo) Update(u *entity.Items) error {
 }
 
 func (r *GormItemsRepo) Delete(id string) error {
-	// soft delete: set is_deleted = true (fixed column name)
 	return r.db.Model(&entity.Items{}).Where("id_item = ?", id).Update("is_deleted", true).Error
 }

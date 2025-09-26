@@ -12,19 +12,16 @@ import (
 	"github.com/google/wire"
 )
 
-// App is an aggregate of application objects returned by the injector.
 type App struct {
 	Server *http.Server
 	Router *gin.Engine
 }
 
-// Repos groups repository instances.
 type Repos struct {
 	Users    repo.UsersRepo
 	Profiles repo.ProfilesRepo
 }
 
-// InitializeApp wires dependencies and returns an *App.
 func InitializeApp() *App {
 	panic(wire.Build(
 		ConfigSet,
@@ -37,7 +34,6 @@ func InitializeApp() *App {
 	))
 }
 
-// InitializeRepos wires and returns *Repos.
 func InitializeRepos() *Repos {
 	panic(wire.Build(
 		ConfigSet,
@@ -46,7 +42,6 @@ func InitializeRepos() *Repos {
 	))
 }
 
-// InitializeServer is a convenience wrapper returning only the server.
 func InitializeServer() *http.Server {
 	app := InitializeApp()
 	return app.Server

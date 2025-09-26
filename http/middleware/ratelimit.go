@@ -18,7 +18,6 @@ type clientLimiter struct {
 
 var clients sync.Map
 
-// getLimiter returns a rate limiter for the given key (ip). Configured for 5 requests per minute with burst 5.
 func getLimiter(key string) *rate.Limiter {
 	if v, ok := clients.Load(key); ok {
 		cl := v.(*clientLimiter)
@@ -31,7 +30,6 @@ func getLimiter(key string) *rate.Limiter {
 	return limiter
 }
 
-// Cleanup goroutine to remove stale limiters
 func init() {
 	go func() {
 		for {
@@ -48,7 +46,6 @@ func init() {
 	}()
 }
 
-// LoginRateLimiter is a Gin middleware that rate-limits requests per client IP for login endpoints.
 func LoginRateLimiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()

@@ -13,7 +13,7 @@ type Config struct {
 	Port      string
 	DB        *gorm.DB
 	JWTSecret string
-	JWTTTL    int // minutes
+	JWTTTL    int 
 }
 
 func NewEnvConfig() *Config {
@@ -33,7 +33,6 @@ func NewEnvConfig() *Config {
 		log.Fatal("Failed to connect to database")
 	}
 
-	// read JWT settings
 	jwtSecret := getEnv("JWT_SECRET", "halow")
 	jwtTTLStr := getEnv("JWT_TTL", "60")
 	jwtTTL, err := strconv.Atoi(jwtTTLStr)

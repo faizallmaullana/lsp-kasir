@@ -43,7 +43,6 @@ func ProvidePivotItemsToTransactionsRepo(db *gorm.DB) repo.PivotItemsToTransacti
 }
 
 // Services
-// Service providers (currently only authentication is used)
 func ProvideAuthenticationService(r repo.UsersRepo) services.AuthenticationService {
 	return services.NewAuthenticationService(r)
 }
@@ -64,7 +63,6 @@ func ProvideTransactionsService(r repo.TransactionsRepo) services.TransactionsSe
 }
 
 // Handlers
-// Handler providers
 func ProvideAuthenticationHandler(s services.AuthenticationService, sess services.SessionService, cfg *conf.Config) *handler.AuthenticationHandler {
 	return handler.NewAuthenticationHandler(s, sess, cfg)
 }
@@ -85,8 +83,6 @@ func ProvideTransactionsHandler(cfg *conf.Config, tx services.TransactionsServic
 	return handler.NewTransactionsHandler(cfg, tx, items, pivot)
 }
 
-// Register routes on the router
-// ProvideRouterWithRoutes builds the router and registers routes (single *gin.Engine provider).
 func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.UsersHandler, ih *handler.ItemsHandler, th *handler.TransactionsHandler, rh *handler.ReportHandler) *gin.Engine {
 	r := ProvideRouter()
 	api := r.Group("/api")
@@ -102,7 +98,6 @@ func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.User
 	return r
 }
 
-// Wire provider sets (grouped for cleaner injector definitions)
 var (
 	ConfigSet  = wire.NewSet(ProvideEnvConfig, ProvideDB)
 	RepoSet    = wire.NewSet(ProvideUsersRepo, ProvideProfilesRepo, ProvideSessionsRepo, ProvideItemsRepo, ProvideTransactionsRepo, ProvidePivotItemsToTransactionsRepo)

@@ -64,14 +64,11 @@ func (h *TransactionsHandler) get(c *gin.Context) {
 		c.JSON(http.StatusNotFound, helper.NotFoundResponse("transaction not found"))
 		return
 	}
-	// load items (optional)
 	pivots, _ := h.pivotRepo.ListByTransaction(id)
-	// enrich each pivot with item details
 	details := make([]dto.TransactionItemDetail, 0, len(pivots))
 	for _, p := range pivots {
 		it, err := h.itemsRepo.GetByID(p.IdItem)
 		if err != nil {
-			// skip missing items, but continue
 			continue
 		}
 		details = append(details, dto.TransactionItemDetail{
@@ -98,7 +95,6 @@ func (h *TransactionsHandler) create(c *gin.Context) {
 		return
 	}
 
-	// Extract user ID from JWT claims (set by middleware)
 	userID := ""
 	if v, ok := c.Get("claims"); ok {
 		switch claims := v.(type) {
@@ -117,7 +113,6 @@ func (h *TransactionsHandler) create(c *gin.Context) {
 		return
 	}
 
-	// Validate items and compute total
 	var total float64
 	pivots := make([]entity.PivotItemsToTransaction, 0, len(req.Items))
 	for _, it := range req.Items {
@@ -145,14 +140,12 @@ func (h *TransactionsHandler) create(c *gin.Context) {
 		TotalPrice:    total,
 	}
 
-	// Create transaction
 	saved, err := h.txSvc.Create(tx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to create transaction"))
 		return
 	}
 
-	// attach transaction id and persist pivot rows
 	for i := range pivots {
 		pivots[i].IdTransaction = saved.IdTransaction
 	}
@@ -193,7 +186,6 @@ func (h *TransactionsHandler) delete(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to delete transaction"))
 		return
 	}
-	// soft delete pivot rows too
 	_ = h.pivotRepo.DeleteByTransaction(id)
 	c.JSON(http.StatusOK, helper.SuccessResponse("deleted", gin.H{"id": id}))
 }

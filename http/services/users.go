@@ -26,7 +26,6 @@ func NewUsersService(u repo.UsersRepo) UsersService {
 	return &usersService{users: u}
 }
 
-// Create persists a new user.
 func (s *usersService) Create(u *entity.Users) (*entity.Users, error) {
 	if err := s.users.Create(u); err != nil {
 		return nil, err
@@ -34,7 +33,6 @@ func (s *usersService) Create(u *entity.Users) (*entity.Users, error) {
 	return u, nil
 }
 
-// GetAll returns a list of users.
 func (s *usersService) GetAll(count, page int) ([]entity.Users, error) {
 	if count <= 0 {
 		count = 10
@@ -67,7 +65,6 @@ func (s *usersService) GetByID(id string) (*entity.Users, error) {
 	return u, nil
 }
 
-// GetByEmail returns a user by email.
 func (s *usersService) GetByEmail(email string) (*entity.Users, error) {
 	u, err := s.users.GetByEmail(email)
 	if err != nil {
@@ -76,7 +73,6 @@ func (s *usersService) GetByEmail(email string) (*entity.Users, error) {
 	return u, nil
 }
 
-// Update modifies an existing user.
 func (s *usersService) Update(id string, u *entity.Users) (*entity.Users, error) {
 	if id == "" || u == nil {
 		return nil, errors.New("invalid input")
@@ -88,7 +84,6 @@ func (s *usersService) Update(id string, u *entity.Users) (*entity.Users, error)
 	return u, nil
 }
 
-// Delete removes a user.
 func (s *usersService) Delete(id string) error {
 	if id == "" {
 		return errors.New("id required")
@@ -96,13 +91,11 @@ func (s *usersService) Delete(id string) error {
 	return s.users.Delete(id)
 }
 
-// Optional: example of method with context (future extension)
+// optional
 func (s *usersService) withContext(ctx context.Context) repo.UsersRepo {
-	// placeholder for future repo methods that accept context
 	return s.users
 }
 
-// Debug helper (not exported)
 func debugUser(u *entity.Users) {
 	if u == nil {
 		fmt.Println("debugUser: nil user")

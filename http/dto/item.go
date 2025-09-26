@@ -1,6 +1,5 @@
 package dto
 
-// CreateItemRequest represents payload to create an item.
 type CreateItemRequest struct {
 	ItemName    string  `json:"item_name" binding:"required"`
 	ItemType    string  `json:"item_type"`
@@ -10,7 +9,6 @@ type CreateItemRequest struct {
 	ImageUrl    string  `json:"image_url"`
 }
 
-// UpdateItemRequest represents payload to update an item.
 type UpdateItemRequest struct {
 	ItemName    *string  `json:"item_name"`
 	ItemType    *string  `json:"item_type"`

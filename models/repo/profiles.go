@@ -11,7 +11,7 @@ type ProfilesRepo interface {
 	Create(u *entity.Profiles) error
 	GetByID(id string) (*entity.Profiles, error)
 	List() ([]*entity.Profiles, error)
-	ListPage(limit, offset int) ([]*entity.Profiles, error) // pagination
+	ListPage(limit, offset int) ([]*entity.Profiles, error)
 	Update(u *entity.Profiles) error
 	Delete(id string) error
 }

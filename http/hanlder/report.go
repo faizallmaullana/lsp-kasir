@@ -28,7 +28,6 @@ func (h *ReportHandler) Register(rg *gin.RouterGroup) {
 	rg.GET("/report/today", h.reportToday)
 }
 
-// reportByExactDate returns report filtered by an exact calendar date (dd/mm/yyyy).
 func (h *ReportHandler) reportByExactDate(c *gin.Context) {
 	ddStr := c.Param("dd")
 	mmStr := c.Param("mm")
@@ -42,7 +41,6 @@ func (h *ReportHandler) reportByExactDate(c *gin.Context) {
 		return
 	}
 
-	// Pull transactions (naive) and filter by date components
 	list, err := h.txSvc.GetAll(1000, 1)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to query transactions"))
@@ -84,8 +82,6 @@ func (h *ReportHandler) reportByMonthYear(c *gin.Context) {
 		return
 	}
 
-	// naive approach: list all and filter by month/year
-	// For large data, add repo method to query by date range.
 	list, err := h.txSvc.GetAll(1000, 1)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to query transactions"))

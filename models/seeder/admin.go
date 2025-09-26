@@ -10,15 +10,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// SeedAdmin ensures an admin user exists. If a user with username 'admin' does not exist, it will be created.
 func SeedAdmin(users repo.UsersRepo) error {
 	_, err := users.GetByEmail("mail@paisaltanjung.my.id")
 	if err == nil {
-		// admin already exists
 		return nil
 	}
 
-	pwd := "admin123" // default password; consider taking from env
+	pwd := "admin123"
 	hashed, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
 	if err != nil {
 		return err
