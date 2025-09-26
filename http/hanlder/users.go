@@ -2,8 +2,9 @@ package handler
 
 import (
 	"fmt"
-	"strings"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"faizalmaulana/lsp/conf"
 	"faizalmaulana/lsp/helper"
@@ -13,8 +14,8 @@ import (
 	"faizalmaulana/lsp/models/entity"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	jwt "github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UsersHandler struct {
@@ -39,6 +40,7 @@ func (h *UsersHandler) Register(rr *gin.RouterGroup) {
 	// Admin-only user management
 	ug := rr.Group("/users")
 	ug.POST("", middleware.JWTMiddleware(h.cfg), h.createUserWithProfileAdmin)
+	ug.GET("", middleware.JWTMiddleware(h.cfg), h.listUsers)
 }
 
 // createUserWithProfileAdmin allows admin to create a new user along with a primary profile
@@ -266,4 +268,51 @@ func (h *UsersHandler) updateEmail(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, helper.SuccessResponse("email updated", gin.H{"email": updated.Email}))
+}
+
+// listUsers returns a paginated list of users (admin only)
+// Query params: count (default 10, max 100), page (default 1)
+func (h *UsersHandler) listUsers(c *gin.Context) {
+	// Auth + role check
+	claimsVal, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
+		return
+	}
+	claims, ok := claimsVal.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
+		return
+	}
+	roleStr, _ := claims["role"].(string)
+	if strings.ToLower(roleStr) != "admin" {
+		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
+		return
+	}
+
+	// Parse pagination
+	countQ := c.Query("count")
+	pageQ := c.Query("page")
+	count, _ := strconv.Atoi(countQ)
+	page, _ := strconv.Atoi(pageQ)
+
+	users, err := h.Users.GetAll(count, page)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to list users"))
+		return
+	}
+
+	// Omit passwords in response
+	out := make([]gin.H, 0, len(users))
+	for _, u := range users {
+		out = append(out, gin.H{
+			"id_user":    u.IdUser,
+			"email":      u.Email,
+			"role":       u.Role,
+			"is_deleted": u.IsDeleted,
+			"timestamp":  u.Timestamp,
+		})
+	}
+
+	c.JSON(http.StatusOK, helper.SuccessResponse("OK", out))
 }

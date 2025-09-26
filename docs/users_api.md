@@ -187,6 +187,42 @@ Errors:
 - 401 UNAUTHORIZED (no token or non-admin)
 - 500 INTERNAL_SERVER_ERROR (failed to create user/profile)
 
+## GET /api/users (Admin only)
+List users with pagination. Only available to `admin` role.
+
+Headers:
+- Authorization: Bearer <token>
+
+Query Parameters:
+- `count` (optional): items per page, default 10, max 100
+- `page` (optional): page number, default 1
+
+Example:
+```
+GET /api/users?count=20&page=2
+```
+
+Response 200:
+```
+{
+  "MESSAGE": "SUCCESS",
+  "STATUS": "OK",
+  "DATA": [
+    {
+      "id_user": "string",
+      "email": "user@example.com",
+      "role": "admin|cashier|user",
+      "is_deleted": false,
+      "timestamp": "RFC3339"
+    }
+  ]
+}
+```
+
+Errors:
+- 401 UNAUTHORIZED (no token or non-admin)
+- 500 INTERNAL_SERVER_ERROR (failed to list users)
+
 ## PUT /api/profile/email
 Update the current user's email.
 

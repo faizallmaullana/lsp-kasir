@@ -44,6 +44,7 @@ GET /api/items?count=20&page=2
     {
       "id_item": "uuid-string",
       "item_name": "Product Name",
+  "item_type": "string",
       "is_available": true,
       "price": 29.99,
       "description": "Product description",
@@ -96,6 +97,7 @@ GET /api/items/123e4567-e89b-12d3-a456-426614174000
   "DATA": {
     "id_item": "123e4567-e89b-12d3-a456-426614174000",
     "item_name": "Product Name",
+  "item_type": "string",
     "is_available": true,
     "price": 29.99,
     "description": "Product description",
@@ -136,6 +138,7 @@ Authorization: Bearer <your_jwt_token>
 ```json
 {
   "item_name": "string (required)",
+  "item_type": "string (optional)",
   "is_available": "boolean (optional, default: true)",
   "price": "number (required)",
   "description": "string (optional)",
@@ -177,6 +180,7 @@ Authorization: Bearer <your_jwt_token>
   "DATA": {
     "id_item": "generated-uuid",
     "item_name": "New Product",
+  "item_type": "string",
     "is_available": true,
     "price": 49.99,
     "description": "A great new product",
@@ -235,6 +239,7 @@ Authorization: Bearer <your_jwt_token>
 ```json
 {
   "item_name": "string (optional)",
+  "item_type": "string (optional)",
   "is_available": "boolean (optional)",
   "price": "number (optional)",
   "description": "string (optional)",
@@ -262,6 +267,7 @@ Authorization: Bearer <your_jwt_token>
   "DATA": {
     "id_item": "123e4567-e89b-12d3-a456-426614174000",
     "item_name": "Updated Product Name",
+  "item_type": "string",
     "is_available": true,
     "price": 59.99,
     "description": "Original description",

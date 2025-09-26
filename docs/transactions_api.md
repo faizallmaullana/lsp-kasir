@@ -41,7 +41,7 @@ Responses
   "DATA": [
     {
       "id_transaction": "uuid-string",
-      "id_user": "uuid-user-or-empty",
+  "id_user": "uuid-user",
       "buyer_contact": "0812-xxxx",
       "total_price": 199000,
       "is_deleted": false,
@@ -86,7 +86,7 @@ Responses
   "DATA": {
     "transaction": {
       "id_transaction": "123e4567-e89b-12d3-a456-426614174000",
-      "id_user": "uuid-user-or-empty",
+  "id_user": "uuid-user",
       "buyer_contact": "0812-xxxx",
       "total_price": 199000,
       "is_deleted": false,
@@ -152,7 +152,7 @@ Responses
   "DATA": {
     "transaction": {
       "id_transaction": "generated-uuid",
-      "id_user": "uuid-user-or-empty",
+  "id_user": "uuid-user",
       "buyer_contact": "0812-xxxx",
       "total_price": 299000,
       "is_deleted": false,
@@ -235,7 +235,7 @@ Responses
   "STATUS": "updated",
   "DATA": {
     "id_transaction": "123e4567-e89b-12d3-a456-426614174000",
-    "id_user": "uuid-user-or-empty",
+  "id_user": "uuid-user",
     "buyer_contact": "updated contact",
     "total_price": 199000,
     "is_deleted": false,
