@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"faizalmaulana/lsp/conf"
-	"faizalmaulana/lsp/dto"
 	"faizalmaulana/lsp/helper"
+	"faizalmaulana/lsp/http/dto"
 	"faizalmaulana/lsp/http/middleware"
 	"faizalmaulana/lsp/http/services"
 	"faizalmaulana/lsp/models/entity"
@@ -35,6 +35,7 @@ func (h *ItemsHandler) Register(rr *gin.RouterGroup) {
 func (h *ItemsHandler) list(c *gin.Context) {
 	count := 10
 	page := 1
+	itemType := c.Query("type")
 	if v := c.Query("count"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
 			count = n
@@ -45,7 +46,15 @@ func (h *ItemsHandler) list(c *gin.Context) {
 			page = n
 		}
 	}
-	items, err := h.items.GetAll(count, page)
+	var (
+		items []entity.Items
+		err   error
+	)
+	if itemType != "" {
+		items, err = h.items.GetAllByType(count, page, itemType)
+	} else {
+		items, err = h.items.GetAll(count, page)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to list items"))
 		return
@@ -69,7 +78,7 @@ func (h *ItemsHandler) create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, helper.BadRequestResponse(err.Error()))
 		return
 	}
-	it := &entity.Items{IdItem: helper.Uuid(), ItemName: req.ItemName, Price: req.Price, Description: req.Description, ImageUrl: req.ImageUrl}
+	it := &entity.Items{IdItem: helper.Uuid(), ItemName: req.ItemName, ItemType: req.ItemType, Price: req.Price, Description: req.Description, ImageUrl: req.ImageUrl}
 	if req.IsAvailable != nil {
 		it.IsAvailable = *req.IsAvailable
 	}
@@ -95,6 +104,9 @@ func (h *ItemsHandler) update(c *gin.Context) {
 	}
 	if req.ItemName != nil {
 		existing.ItemName = *req.ItemName
+	}
+	if req.ItemType != nil {
+		existing.ItemType = *req.ItemType
 	}
 	if req.IsAvailable != nil {
 		existing.IsAvailable = *req.IsAvailable

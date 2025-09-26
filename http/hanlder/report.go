@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"faizalmaulana/lsp/conf"
-	"faizalmaulana/lsp/dto"
 	"faizalmaulana/lsp/helper"
+	"faizalmaulana/lsp/http/dto"
 	"faizalmaulana/lsp/http/services"
 
 	"github.com/gin-gonic/gin"

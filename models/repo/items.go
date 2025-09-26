@@ -12,6 +12,7 @@ type ItemsRepo interface {
 	GetByID(id string) (*entity.Items, error)
 	List() ([]*entity.Items, error)
 	ListPage(limit, offset int) ([]*entity.Items, error) // new pagination method
+	ListPageByType(limit, offset int, itemType string) ([]*entity.Items, error)
 	Update(u *entity.Items) error
 	Delete(id string) error // soft delete
 }
@@ -59,6 +60,27 @@ func (r *GormItemsRepo) ListPage(limit, offset int) ([]*entity.Items, error) {
 	}
 	var out []*entity.Items
 	if err := r.db.Where("is_deleted = ?", false).Limit(limit).Offset(offset).Find(&out).Error; err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (r *GormItemsRepo) ListPageByType(limit, offset int, itemType string) ([]*entity.Items, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	var out []*entity.Items
+	q := r.db.Where("is_deleted = ?", false)
+	if itemType != "" {
+		q = q.Where("item_type = ?", itemType)
+	}
+	if err := q.Limit(limit).Offset(offset).Find(&out).Error; err != nil {
 		return nil, err
 	}
 	return out, nil

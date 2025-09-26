@@ -4,6 +4,7 @@ import (
 	"errors"
 	"faizalmaulana/lsp/models/entity"
 	"faizalmaulana/lsp/models/repo"
+	"strings"
 )
 
 type TransactionsService interface {
@@ -23,6 +24,9 @@ func NewTransactionsService(r repo.TransactionsRepo) TransactionsService {
 func (s *transactionsService) Create(t *entity.Transactions) (*entity.Transactions, error) {
 	if t == nil {
 		return nil, errors.New("transaction nil")
+	}
+	if strings.TrimSpace(t.IdUser) == "" {
+		return nil, errors.New("id_user required")
 	}
 	if err := s.repo.Create(t); err != nil {
 		return nil, err

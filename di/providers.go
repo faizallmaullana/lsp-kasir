@@ -38,6 +38,9 @@ func ProvideItemsRepo(db *gorm.DB) repo.ItemsRepo       { return repo.NewGormIte
 func ProvideTransactionsRepo(db *gorm.DB) repo.TransactionsRepo {
 	return repo.NewGormTransactionsRepo(db)
 }
+func ProvidePivotItemsToTransactionsRepo(db *gorm.DB) repo.PivotItemsToTransactionsRepo {
+	return repo.NewGormPivotItemsToTransactionsRepo(db)
+}
 
 // Services
 // Service providers (currently only authentication is used)
@@ -78,14 +81,19 @@ func ProvideReportHandler(cfg *conf.Config, tx services.TransactionsService) *ha
 	return handler.NewReportHandler(cfg, tx)
 }
 
+func ProvideTransactionsHandler(cfg *conf.Config, tx services.TransactionsService, items repo.ItemsRepo, pivot repo.PivotItemsToTransactionsRepo) *handler.TransactionsHandler {
+	return handler.NewTransactionsHandler(cfg, tx, items, pivot)
+}
+
 // Register routes on the router
 // ProvideRouterWithRoutes builds the router and registers routes (single *gin.Engine provider).
-func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.UsersHandler, ih *handler.ItemsHandler, rh *handler.ReportHandler) *gin.Engine {
+func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.UsersHandler, ih *handler.ItemsHandler, th *handler.TransactionsHandler, rh *handler.ReportHandler) *gin.Engine {
 	r := ProvideRouter()
 	api := r.Group("/api")
 	ah.Register(api)
 	uh.Register(api)
 	ih.Register(api)
+	th.Register(api)
 	rh.Register(api)
 
 	for _, rt := range r.Routes() {
@@ -97,9 +105,9 @@ func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.User
 // Wire provider sets (grouped for cleaner injector definitions)
 var (
 	ConfigSet  = wire.NewSet(ProvideEnvConfig, ProvideDB)
-	RepoSet    = wire.NewSet(ProvideUsersRepo, ProvideProfilesRepo, ProvideSessionsRepo, ProvideItemsRepo, ProvideTransactionsRepo)
+	RepoSet    = wire.NewSet(ProvideUsersRepo, ProvideProfilesRepo, ProvideSessionsRepo, ProvideItemsRepo, ProvideTransactionsRepo, ProvidePivotItemsToTransactionsRepo)
 	ServiceSet = wire.NewSet(ProvideAuthenticationService, ProvideSessionService, ProvideUsersService, ProvideProfilesService, ProvideItemsService, ProvideTransactionsService)
-	HandlerSet = wire.NewSet(ProvideAuthenticationHandler, ProvideUsersHandler, ProvideItemsHandler, ProvideReportHandler)
+	HandlerSet = wire.NewSet(ProvideAuthenticationHandler, ProvideUsersHandler, ProvideItemsHandler, ProvideTransactionsHandler, ProvideReportHandler)
 	RouterSet  = wire.NewSet(ProvideRouterWithRoutes)
 	ServerSet  = wire.NewSet(ProvideHTTPServer)
 )
