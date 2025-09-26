@@ -6,7 +6,6 @@ type Items struct {
 	IdItem string `json:"id_item" gorm:"type:varchar(36);unique;primaryKey;not null"`
 
 	ItemName    string  `json:"item_name" gorm:"type:varchar(255);not null"`
-	ItemType    string  `json:"item_type" gorm:"type:varchar(50);index"`
 	IsAvailable bool    `json:"is_available" gorm:"type:boolean;default:true"`
 	Price       float64 `json:"price" gorm:"type:decimal(10,2);not null"`
 	Description string  `json:"description" gorm:"type:text"`

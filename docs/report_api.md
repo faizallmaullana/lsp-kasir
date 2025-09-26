@@ -146,6 +146,36 @@ Responses
 
 ---
 
+## 4) Today Summary (Revenue, Counts)
+
+- Method: GET
+- Path: `/api/report/today/summary`
+- Description: Returns today's revenue (sum_total_price), total transactions, and total products sold.
+
+Example
+```
+GET /api/report/today/summary
+```
+
+Responses
+- 200 OK
+```json
+{
+  "MESSAGE": "SUCCESS",
+  "STATUS": "OK",
+  "DATA": {
+    "date": "2025-09-26",
+    "total_transactions": 5,
+    "total_products_sold": 18,
+    "sum_total_price": 750000
+  }
+}
+```
+- 500 Internal Server Error
+```json
+{ "STATUS": "INTERNAL_SERVER_ERROR", "ERROR": "failed to query transactions" }
+```
+
 ## Data Shapes
 
 Monthly Response

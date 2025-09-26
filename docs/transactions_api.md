@@ -60,7 +60,7 @@ Responses
 
 ---
 
-### 2) Get Transaction by ID (with Item Details)
+### 2) Get Transaction by ID (with Items)
 
 - Method: GET
 - Path: `/api/transactions/:id`
@@ -94,16 +94,16 @@ Responses
     },
     "items": [
       {
+        "id_transaction": "123e4567-e89b-12d3-a456-426614174000",
         "id_item": "item-uuid-1",
-        "item_name": "Product A",
-        "image_url": "https://example.com/a.jpg",
+        "is_deleted": false,
         "quantity": 2,
         "price": 99000
       },
       {
+        "id_transaction": "123e4567-e89b-12d3-a456-426614174000",
         "id_item": "item-uuid-2",
-        "item_name": "Product B",
-        "image_url": "https://example.com/b.jpg",
+        "is_deleted": false,
         "quantity": 1,
         "price": 1000
       }
@@ -183,9 +183,6 @@ Responses
   "STATUS": "UNAUTHORIZED"
 }
 ```
-
-Security Notes
-- The create endpoint derives `id_user` from the JWT claim `sub`. Ensure the token is provided via `Authorization: Bearer <token>` and the server has a valid `JWT_SECRET`.
 - 500 Internal Server Error
 ```json
 {

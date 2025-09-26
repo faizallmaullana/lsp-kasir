@@ -10,7 +10,7 @@ The Items API provides CRUD operations for managing inventory items in the syste
 
 ## Endpoints
 
-### 1. List Items (Paginated, Optional Type Filter)
+### 1. List Items (Paginated)
 
 **Endpoint:** `GET /api/items`
 
@@ -26,12 +26,10 @@ Content-Type: application/json
 **Query Parameters:**
 - `count` (optional): Number of items per page (default: 10, max: 100)
 - `page` (optional): Page number (default: 1)
-- `type` (optional): Filter by `item_type` (exact match)
 
-**Examples:**
+**Example:**
 ```
 GET /api/items?count=20&page=2
-GET /api/items?type=beverage&count=10&page=1
 ```
 
 #### Responses
@@ -45,7 +43,6 @@ GET /api/items?type=beverage&count=10&page=1
     {
       "id_item": "uuid-string",
       "item_name": "Product Name",
-  "item_type": "beverage",
       "is_available": true,
       "price": 29.99,
       "description": "Product description",
@@ -98,7 +95,6 @@ GET /api/items/123e4567-e89b-12d3-a456-426614174000
   "DATA": {
     "id_item": "123e4567-e89b-12d3-a456-426614174000",
     "item_name": "Product Name",
-  "item_type": "beverage",
     "is_available": true,
     "price": 29.99,
     "description": "Product description",
@@ -139,7 +135,6 @@ Authorization: Bearer <your_jwt_token>
 ```json
 {
   "item_name": "string (required)",
-  "item_type": "string (optional)",
   "is_available": "boolean (optional, default: true)",
   "price": "number (required)",
   "description": "string (optional)",
@@ -168,7 +163,6 @@ Authorization: Bearer <your_jwt_token>
   "DATA": {
     "id_item": "generated-uuid",
     "item_name": "New Product",
-  "item_type": "beverage",
     "is_available": true,
     "price": 49.99,
     "description": "A great new product",
@@ -227,7 +221,6 @@ Authorization: Bearer <your_jwt_token>
 ```json
 {
   "item_name": "string (optional)",
-  "item_type": "string (optional)",
   "is_available": "boolean (optional)",
   "price": "number (optional)",
   "description": "string (optional)",
@@ -253,7 +246,6 @@ Authorization: Bearer <your_jwt_token>
   "DATA": {
     "id_item": "123e4567-e89b-12d3-a456-426614174000",
     "item_name": "Updated Product Name",
-  "item_type": "beverage",
     "is_available": true,
     "price": 59.99,
     "description": "Original description",
@@ -355,7 +347,6 @@ DELETE /api/items/123e4567-e89b-12d3-a456-426614174000
 {
   "id_item": "string (UUID)",
   "item_name": "string",
-  "item_type": "string",
   "is_available": "boolean",
   "price": "number (decimal)",
   "description": "string",

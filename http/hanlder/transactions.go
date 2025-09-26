@@ -13,7 +13,6 @@ import (
 	"faizalmaulana/lsp/models/repo"
 
 	"github.com/gin-gonic/gin"
-	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 type TransactionsHandler struct {
@@ -65,10 +64,12 @@ func (h *TransactionsHandler) get(c *gin.Context) {
 		return
 	}
 	pivots, _ := h.pivotRepo.ListByTransaction(id)
+	// enrich each pivot with item details
 	details := make([]dto.TransactionItemDetail, 0, len(pivots))
 	for _, p := range pivots {
 		it, err := h.itemsRepo.GetByID(p.IdItem)
 		if err != nil {
+			// skip missing items, but continue
 			continue
 		}
 		details = append(details, dto.TransactionItemDetail{
@@ -97,13 +98,8 @@ func (h *TransactionsHandler) create(c *gin.Context) {
 
 	userID := ""
 	if v, ok := c.Get("claims"); ok {
-		switch claims := v.(type) {
-		case jwt.MapClaims:
-			if sub, ok := claims["sub"].(string); ok {
-				userID = sub
-			}
-		case map[string]any:
-			if sub, ok := claims["sub"].(string); ok {
+		if m, ok := v.(map[string]any); ok {
+			if sub, ok := m["sub"].(string); ok {
 				userID = sub
 			}
 		}

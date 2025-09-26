@@ -11,10 +11,10 @@ type ItemsRepo interface {
 	Create(u *entity.Items) error
 	GetByID(id string) (*entity.Items, error)
 	List() ([]*entity.Items, error)
-	ListPage(limit, offset int) ([]*entity.Items, error) 
+	ListPage(limit, offset int) ([]*entity.Items, error)
 	ListPageByType(limit, offset int, itemType string) ([]*entity.Items, error)
 	Update(u *entity.Items) error
-	Delete(id string) error 
+	Delete(id string) error
 }
 
 type GormItemsRepo struct {
@@ -76,11 +76,13 @@ func (r *GormItemsRepo) ListPageByType(limit, offset int, itemType string) ([]*e
 		offset = 0
 	}
 	var out []*entity.Items
-	q := r.db.Where("is_deleted = ?", false)
+
+	query := r.db.Where("is_deleted = ?", false)
 	if itemType != "" {
-		q = q.Where("item_type = ?", itemType)
+		query = query.Where("item_type = ?", itemType)
 	}
-	if err := q.Limit(limit).Offset(offset).Find(&out).Error; err != nil {
+
+	if err := query.Limit(limit).Offset(offset).Find(&out).Error; err != nil {
 		return nil, err
 	}
 	return out, nil
