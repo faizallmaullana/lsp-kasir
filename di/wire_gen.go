@@ -14,7 +14,6 @@ import (
 
 // Injectors from wire.go:
 
-// InitializeApp wires dependencies and returns an *App.
 func InitializeApp() *App {
 	config := ProvideEnvConfig()
 	db := ProvideDB(config)
@@ -34,7 +33,7 @@ func InitializeApp() *App {
 	transactionsService := ProvideTransactionsService(transactionsRepo)
 	pivotItemsToTransactionsRepo := ProvidePivotItemsToTransactionsRepo(db)
 	transactionsHandler := ProvideTransactionsHandler(config, transactionsService, itemsRepo, pivotItemsToTransactionsRepo)
-	reportHandler := ProvideReportHandler(config, transactionsService)
+	reportHandler := ProvideReportHandler(config, transactionsService, pivotItemsToTransactionsRepo)
 	engine := ProvideRouterWithRoutes(authenticationHandler, usersHandler, itemsHandler, transactionsHandler, reportHandler)
 	server := ProvideHTTPServer(config, engine)
 	app := &App{
@@ -44,7 +43,6 @@ func InitializeApp() *App {
 	return app
 }
 
-// InitializeRepos wires and returns *Repos.
 func InitializeRepos() *Repos {
 	config := ProvideEnvConfig()
 	db := ProvideDB(config)
@@ -59,19 +57,16 @@ func InitializeRepos() *Repos {
 
 // wire.go:
 
-// App is an aggregate of application objects returned by the injector.
 type App struct {
 	Server *http.Server
 	Router *gin.Engine
 }
 
-// Repos groups repository instances.
 type Repos struct {
 	Users    repo.UsersRepo
 	Profiles repo.ProfilesRepo
 }
 
-// InitializeServer is a convenience wrapper returning only the server.
 func InitializeServer() *http.Server {
 	app := InitializeApp()
 	return app.Server

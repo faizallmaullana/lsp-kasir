@@ -9,23 +9,26 @@ import (
 	"faizalmaulana/lsp/helper"
 	"faizalmaulana/lsp/http/dto"
 	"faizalmaulana/lsp/http/services"
+	"faizalmaulana/lsp/models/repo"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ReportHandler struct {
-	cfg   *conf.Config
-	txSvc services.TransactionsService
+	cfg       *conf.Config
+	txSvc     services.TransactionsService
+	pivotRepo repo.PivotItemsToTransactionsRepo
 }
 
-func NewReportHandler(cfg *conf.Config, tx services.TransactionsService) *ReportHandler {
-	return &ReportHandler{cfg: cfg, txSvc: tx}
+func NewReportHandler(cfg *conf.Config, tx services.TransactionsService, pivot repo.PivotItemsToTransactionsRepo) *ReportHandler {
+	return &ReportHandler{cfg: cfg, txSvc: tx, pivotRepo: pivot}
 }
 
 func (h *ReportHandler) Register(rg *gin.RouterGroup) {
-	rg.GET("/report/date/:dd/:mm/:yyyy", h.reportByExactDate)
-	rg.GET("/report/:bulan/:tahun", h.reportByMonthYear)
-	rg.GET("/report/today", h.reportToday)
+	rg.GET("/reports/date/:dd/:mm/:yyyy", h.reportByExactDate)
+	rg.GET("/reports/:bulan/:tahun", h.reportByMonthYear)
+	rg.GET("/reports/today", h.reportToday)
+	rg.GET("/reports/today/summary", h.reportTodaySummary)
 }
 
 func (h *ReportHandler) reportByExactDate(c *gin.Context) {
@@ -144,5 +147,45 @@ func (h *ReportHandler) reportToday(c *gin.Context) {
 	}
 
 	resp := dto.TodayReportResponse{Date: now.Format("2006-01-02"), Total: total, Sum: sum, Items: items}
+	c.JSON(http.StatusOK, helper.SuccessResponse("OK", resp))
+}
+
+// reportTodaySummary returns today's revenue (sum), total transactions, and total products sold.
+func (h *ReportHandler) reportTodaySummary(c *gin.Context) {
+	now := time.Now()
+	y, m, d := now.Date()
+
+	list, err := h.txSvc.GetAll(1000, 1)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to query transactions"))
+		return
+	}
+
+	totalTx := 0
+	var sum float64
+	totalProducts := 0
+
+	for _, t := range list {
+		ts := t.Timestamp
+		if ts.IsZero() {
+			continue
+		}
+		ty, tm, td := ts.Date()
+		if ty == y && tm == m && td == d {
+			totalTx++
+			sum += t.TotalPrice
+			pivots, _ := h.pivotRepo.ListByTransaction(t.IdTransaction)
+			for _, p := range pivots {
+				totalProducts += p.Quantity
+			}
+		}
+	}
+
+	resp := dto.TodaySummaryResponse{
+		Date:              now.Format("2006-01-02"),
+		TotalTransactions: totalTx,
+		TotalProductsSold: totalProducts,
+		SumTotalPrice:     sum,
+	}
 	c.JSON(http.StatusOK, helper.SuccessResponse("OK", resp))
 }

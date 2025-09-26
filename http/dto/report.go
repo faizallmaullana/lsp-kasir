@@ -21,3 +21,10 @@ type TodayReportResponse struct {
 	Sum   float64             `json:"sum_total_price"`
 	Items []ReportTransaction `json:"transactions"`
 }
+
+type TodaySummaryResponse struct {
+	Date              string  `json:"date"`
+	TotalTransactions int     `json:"total_transactions"`
+	TotalProductsSold int     `json:"total_products_sold"`
+	SumTotalPrice     float64 `json:"sum_total_price"`
+}
