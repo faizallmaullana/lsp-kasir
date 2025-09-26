@@ -41,6 +41,7 @@ func ProvideTransactionsRepo(db *gorm.DB) repo.TransactionsRepo {
 func ProvidePivotItemsToTransactionsRepo(db *gorm.DB) repo.PivotItemsToTransactionsRepo {
 	return repo.NewGormPivotItemsToTransactionsRepo(db)
 }
+func ProvideImagesRepo(db *gorm.DB) repo.ImagesRepo { return repo.NewGormImagesRepo(db) }
 
 // Services
 func ProvideAuthenticationService(r repo.UsersRepo) services.AuthenticationService {
@@ -61,6 +62,9 @@ func ProvideItemsService(r repo.ItemsRepo) services.ItemsService {
 func ProvideTransactionsService(r repo.TransactionsRepo) services.TransactionsService {
 	return services.NewTransactionsService(r)
 }
+func ProvideImagesService(r repo.ImagesRepo) services.ImagesService {
+	return services.NewImagesService(r)
+}
 
 // Handlers
 func ProvideAuthenticationHandler(s services.AuthenticationService, sess services.SessionService, cfg *conf.Config) *handler.AuthenticationHandler {
@@ -71,8 +75,8 @@ func ProvideUsersHandler(cfg *conf.Config, profile services.ProfilesService, use
 	return handler.NewUsersHandler(cfg, profile, users)
 }
 
-func ProvideItemsHandler(cfg *conf.Config, items services.ItemsService) *handler.ItemsHandler {
-	return handler.NewItemsHandler(cfg, items)
+func ProvideItemsHandler(cfg *conf.Config, items services.ItemsService, images services.ImagesService) *handler.ItemsHandler {
+	return handler.NewItemsHandler(cfg, items, images)
 }
 
 func ProvideReportHandler(cfg *conf.Config, tx services.TransactionsService, pivot repo.PivotItemsToTransactionsRepo, items repo.ItemsRepo) *handler.ReportHandler {
@@ -83,7 +87,11 @@ func ProvideTransactionsHandler(cfg *conf.Config, tx services.TransactionsServic
 	return handler.NewTransactionsHandler(cfg, tx, items, pivot)
 }
 
-func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.UsersHandler, ih *handler.ItemsHandler, th *handler.TransactionsHandler, rh *handler.ReportHandler) *gin.Engine {
+func ProvideImagesHandler(cfg *conf.Config, svc services.ImagesService) *handler.ImagesHandler {
+	return handler.NewImagesHandler(cfg, svc)
+}
+
+func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.UsersHandler, ih *handler.ItemsHandler, th *handler.TransactionsHandler, rh *handler.ReportHandler, imh *handler.ImagesHandler) *gin.Engine {
 	r := ProvideRouter()
 	api := r.Group("/api")
 	ah.Register(api)
@@ -91,6 +99,7 @@ func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.User
 	ih.Register(api)
 	th.Register(api)
 	rh.Register(api)
+	imh.Register(api)
 
 	for _, rt := range r.Routes() {
 		log.Printf("route: %s %s", rt.Method, rt.Path)
@@ -100,9 +109,9 @@ func ProvideRouterWithRoutes(ah *handler.AuthenticationHandler, uh *handler.User
 
 var (
 	ConfigSet  = wire.NewSet(ProvideEnvConfig, ProvideDB)
-	RepoSet    = wire.NewSet(ProvideUsersRepo, ProvideProfilesRepo, ProvideSessionsRepo, ProvideItemsRepo, ProvideTransactionsRepo, ProvidePivotItemsToTransactionsRepo)
-	ServiceSet = wire.NewSet(ProvideAuthenticationService, ProvideSessionService, ProvideUsersService, ProvideProfilesService, ProvideItemsService, ProvideTransactionsService)
-	HandlerSet = wire.NewSet(ProvideAuthenticationHandler, ProvideUsersHandler, ProvideItemsHandler, ProvideTransactionsHandler, ProvideReportHandler)
+	RepoSet    = wire.NewSet(ProvideUsersRepo, ProvideProfilesRepo, ProvideSessionsRepo, ProvideItemsRepo, ProvideTransactionsRepo, ProvidePivotItemsToTransactionsRepo, ProvideImagesRepo)
+	ServiceSet = wire.NewSet(ProvideAuthenticationService, ProvideSessionService, ProvideUsersService, ProvideProfilesService, ProvideItemsService, ProvideTransactionsService, ProvideImagesService)
+	HandlerSet = wire.NewSet(ProvideAuthenticationHandler, ProvideUsersHandler, ProvideItemsHandler, ProvideTransactionsHandler, ProvideReportHandler, ProvideImagesHandler)
 	RouterSet  = wire.NewSet(ProvideRouterWithRoutes)
 	ServerSet  = wire.NewSet(ProvideHTTPServer)
 )

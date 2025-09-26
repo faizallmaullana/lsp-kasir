@@ -35,6 +35,7 @@ func SetupDatabaseConnection(dbHost, dbPort, dbUser, dbPass, dbName string) *gor
 		&entity.Items{},
 		&entity.Transactions{},
 		&entity.PivotItemsToTransaction{},
+		&entity.Images{},
 	); err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
 	}

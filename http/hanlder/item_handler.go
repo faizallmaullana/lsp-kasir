@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -15,12 +16,13 @@ import (
 )
 
 type ItemsHandler struct {
-	cfg   *conf.Config
-	items services.ItemsService
+	cfg    *conf.Config
+	items  services.ItemsService
+	images services.ImagesService
 }
 
-func NewItemsHandler(cfg *conf.Config, items services.ItemsService) *ItemsHandler {
-	return &ItemsHandler{cfg: cfg, items: items}
+func NewItemsHandler(cfg *conf.Config, items services.ItemsService, images services.ImagesService) *ItemsHandler {
+	return &ItemsHandler{cfg: cfg, items: items, images: images}
 }
 
 func (h *ItemsHandler) Register(rr *gin.RouterGroup) {
@@ -69,7 +71,17 @@ func (h *ItemsHandler) create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, helper.BadRequestResponse(err.Error()))
 		return
 	}
-	it := &entity.Items{IdItem: helper.Uuid(), ItemName: req.ItemName, Price: req.Price, Description: req.Description, ImageUrl: req.ImageUrl}
+
+	fmt.Println(c.Request.RequestURI)
+	// handle base64 image upload if provided
+	imageFileName := req.ImageUrl
+	if h.images != nil && req.ImageBase64 != "" {
+		_, stored, err := h.images.UploadBase64(req.ItemName, req.ImageType, req.ImageBase64)
+		if err == nil {
+			imageFileName = stored
+		}
+	}
+	it := &entity.Items{IdItem: helper.Uuid(), ItemName: req.ItemName, ItemType: req.ItemType, Price: req.Price, Description: req.Description, ImageUrl: imageFileName}
 	if req.IsAvailable != nil {
 		it.IsAvailable = *req.IsAvailable
 	}
@@ -96,6 +108,9 @@ func (h *ItemsHandler) update(c *gin.Context) {
 	if req.ItemName != nil {
 		existing.ItemName = *req.ItemName
 	}
+	if req.ItemType != nil {
+		existing.ItemType = *req.ItemType
+	}
 	if req.IsAvailable != nil {
 		existing.IsAvailable = *req.IsAvailable
 	}
@@ -107,6 +122,17 @@ func (h *ItemsHandler) update(c *gin.Context) {
 	}
 	if req.ImageUrl != nil {
 		existing.ImageUrl = *req.ImageUrl
+	}
+	if h.images != nil && req.ImageBase64 != nil && *req.ImageBase64 != "" {
+		// use provided type or guess from existing
+		ct := ""
+		if req.ImageType != nil {
+			ct = *req.ImageType
+		}
+		_, stored, err := h.images.UploadBase64(existing.ItemName, ct, *req.ImageBase64)
+		if err == nil {
+			existing.ImageUrl = stored
+		}
 	}
 	updated, err := h.items.Update(id, existing)
 	if err != nil {

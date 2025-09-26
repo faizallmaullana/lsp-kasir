@@ -28,13 +28,16 @@ func InitializeApp() *App {
 	usersHandler := ProvideUsersHandler(config, profilesService, usersService)
 	itemsRepo := ProvideItemsRepo(db)
 	itemsService := ProvideItemsService(itemsRepo)
-	itemsHandler := ProvideItemsHandler(config, itemsService)
 	transactionsRepo := ProvideTransactionsRepo(db)
 	transactionsService := ProvideTransactionsService(transactionsRepo)
 	pivotItemsToTransactionsRepo := ProvidePivotItemsToTransactionsRepo(db)
 	transactionsHandler := ProvideTransactionsHandler(config, transactionsService, itemsRepo, pivotItemsToTransactionsRepo)
 	reportHandler := ProvideReportHandler(config, transactionsService, pivotItemsToTransactionsRepo, itemsRepo)
-	engine := ProvideRouterWithRoutes(authenticationHandler, usersHandler, itemsHandler, transactionsHandler, reportHandler)
+	imagesRepo := ProvideImagesRepo(db)
+	imagesService := ProvideImagesService(imagesRepo)
+	imagesHandler := ProvideImagesHandler(config, imagesService)
+	itemsHandler := ProvideItemsHandler(config, itemsService, imagesService)
+	engine := ProvideRouterWithRoutes(authenticationHandler, usersHandler, itemsHandler, transactionsHandler, reportHandler, imagesHandler)
 	server := ProvideHTTPServer(config, engine)
 	app := &App{
 		Server: server,
