@@ -33,7 +33,7 @@ func InitializeApp() *App {
 	transactionsService := ProvideTransactionsService(transactionsRepo)
 	pivotItemsToTransactionsRepo := ProvidePivotItemsToTransactionsRepo(db)
 	transactionsHandler := ProvideTransactionsHandler(config, transactionsService, itemsRepo, pivotItemsToTransactionsRepo)
-	reportHandler := ProvideReportHandler(config, transactionsService, pivotItemsToTransactionsRepo)
+	reportHandler := ProvideReportHandler(config, transactionsService, pivotItemsToTransactionsRepo, itemsRepo)
 	engine := ProvideRouterWithRoutes(authenticationHandler, usersHandler, itemsHandler, transactionsHandler, reportHandler)
 	server := ProvideHTTPServer(config, engine)
 	app := &App{

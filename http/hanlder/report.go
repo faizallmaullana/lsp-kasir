@@ -18,10 +18,11 @@ type ReportHandler struct {
 	cfg       *conf.Config
 	txSvc     services.TransactionsService
 	pivotRepo repo.PivotItemsToTransactionsRepo
+	itemsRepo repo.ItemsRepo
 }
 
-func NewReportHandler(cfg *conf.Config, tx services.TransactionsService, pivot repo.PivotItemsToTransactionsRepo) *ReportHandler {
-	return &ReportHandler{cfg: cfg, txSvc: tx, pivotRepo: pivot}
+func NewReportHandler(cfg *conf.Config, tx services.TransactionsService, pivot repo.PivotItemsToTransactionsRepo, items repo.ItemsRepo) *ReportHandler {
+	return &ReportHandler{cfg: cfg, txSvc: tx, pivotRepo: pivot, itemsRepo: items}
 }
 
 func (h *ReportHandler) Register(rg *gin.RouterGroup) {
@@ -53,6 +54,14 @@ func (h *ReportHandler) reportByExactDate(c *gin.Context) {
 	var items []dto.ReportTransaction
 	total := 0
 	var sum float64
+	totalProducts := 0
+	var minOrder float64 = 0
+	var maxOrder float64 = 0
+	type agg struct {
+		qty     int
+		revenue float64
+	}
+	perItem := map[string]*agg{}
 
 	for _, t := range list {
 		ts := t.Timestamp
@@ -68,10 +77,54 @@ func (h *ReportHandler) reportByExactDate(c *gin.Context) {
 			})
 			sum += t.TotalPrice
 			total++
+			pivots, _ := h.pivotRepo.ListByTransaction(t.IdTransaction)
+			for _, p := range pivots {
+				totalProducts += p.Quantity
+				if minOrder == 0 || t.TotalPrice < minOrder {
+					minOrder = t.TotalPrice
+				}
+				if t.TotalPrice > maxOrder {
+					maxOrder = t.TotalPrice
+				}
+				a := perItem[p.IdItem]
+				if a == nil {
+					a = &agg{}
+					perItem[p.IdItem] = a
+				}
+				a.qty += p.Quantity
+				a.revenue += float64(p.Quantity) * p.Price
+			}
 		}
 	}
 
-	resp := dto.TodayReportResponse{Date: time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local).Format("2006-01-02"), Total: total, Sum: sum, Items: items}
+	top := make([]dto.TopItem, 0, len(perItem))
+	for id, a := range perItem {
+		it, err := h.itemsRepo.GetByID(id)
+		if err != nil {
+			continue
+		}
+		top = append(top, dto.TopItem{IdItem: it.IdItem, ItemName: it.ItemName, ImageUrl: it.ImageUrl, QuantitySold: a.qty, Revenue: a.revenue})
+	}
+	if len(top) > 1 {
+		for i := 0; i < len(top)-1; i++ {
+			for j := i + 1; j < len(top); j++ {
+				if top[j].QuantitySold > top[i].QuantitySold || (top[j].QuantitySold == top[i].QuantitySold && top[j].Revenue > top[i].Revenue) {
+					top[i], top[j] = top[j], top[i]
+				}
+			}
+		}
+		if len(top) > 5 {
+			top = top[:5]
+		}
+	}
+	aov := 0.0
+	avgItems := 0.0
+	if total > 0 {
+		aov = sum / float64(total)
+		avgItems = float64(totalProducts) / float64(total)
+	}
+
+	resp := dto.TodayReportResponse{Date: time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local).Format("2006-01-02"), Total: total, Sum: sum, TotalProductsSold: totalProducts, AverageOrderValue: aov, MinOrderValue: minOrder, MaxOrderValue: maxOrder, AvgItemsPerTx: avgItems, TopItems: top, Items: items}
 	c.JSON(http.StatusOK, helper.SuccessResponse("OK", resp))
 }
 
@@ -94,6 +147,14 @@ func (h *ReportHandler) reportByMonthYear(c *gin.Context) {
 	var items []dto.ReportTransaction
 	total := 0
 	var sum float64
+	totalProducts := 0
+	var minOrder float64 = 0
+	var maxOrder float64 = 0
+	type agg struct {
+		qty     int
+		revenue float64
+	}
+	perItem := map[string]*agg{}
 	for _, t := range list {
 		ts := t.Timestamp
 		if ts.IsZero() {
@@ -108,10 +169,54 @@ func (h *ReportHandler) reportByMonthYear(c *gin.Context) {
 			})
 			sum += t.TotalPrice
 			total++
+			pivots, _ := h.pivotRepo.ListByTransaction(t.IdTransaction)
+			for _, p := range pivots {
+				totalProducts += p.Quantity
+				if minOrder == 0 || t.TotalPrice < minOrder {
+					minOrder = t.TotalPrice
+				}
+				if t.TotalPrice > maxOrder {
+					maxOrder = t.TotalPrice
+				}
+				a := perItem[p.IdItem]
+				if a == nil {
+					a = &agg{}
+					perItem[p.IdItem] = a
+				}
+				a.qty += p.Quantity
+				a.revenue += float64(p.Quantity) * p.Price
+			}
 		}
 	}
 
-	resp := dto.ReportResponse{Month: month, Year: year, Total: total, Sum: sum, Items: items}
+	top := make([]dto.TopItem, 0, len(perItem))
+	for id, a := range perItem {
+		it, err := h.itemsRepo.GetByID(id)
+		if err != nil {
+			continue
+		}
+		top = append(top, dto.TopItem{IdItem: it.IdItem, ItemName: it.ItemName, ImageUrl: it.ImageUrl, QuantitySold: a.qty, Revenue: a.revenue})
+	}
+	if len(top) > 1 {
+		for i := 0; i < len(top)-1; i++ {
+			for j := i + 1; j < len(top); j++ {
+				if top[j].QuantitySold > top[i].QuantitySold || (top[j].QuantitySold == top[i].QuantitySold && top[j].Revenue > top[i].Revenue) {
+					top[i], top[j] = top[j], top[i]
+				}
+			}
+		}
+		if len(top) > 5 {
+			top = top[:5]
+		}
+	}
+	aov := 0.0
+	avgItems := 0.0
+	if total > 0 {
+		aov = sum / float64(total)
+		avgItems = float64(totalProducts) / float64(total)
+	}
+
+	resp := dto.ReportResponse{Month: month, Year: year, Total: total, Sum: sum, TotalProductsSold: totalProducts, AverageOrderValue: aov, MinOrderValue: minOrder, MaxOrderValue: maxOrder, AvgItemsPerTx: avgItems, TopItems: top, Items: items}
 	c.JSON(http.StatusOK, helper.SuccessResponse("OK", resp))
 }
 
@@ -128,6 +233,14 @@ func (h *ReportHandler) reportToday(c *gin.Context) {
 	var items []dto.ReportTransaction
 	total := 0
 	var sum float64
+	totalProducts := 0
+	var minOrder float64 = 0
+	var maxOrder float64 = 0
+	type agg struct {
+		qty     int
+		revenue float64
+	}
+	perItem := map[string]*agg{}
 	for _, t := range list {
 		ts := t.Timestamp
 		if ts.IsZero() {
@@ -143,14 +256,57 @@ func (h *ReportHandler) reportToday(c *gin.Context) {
 			})
 			sum += t.TotalPrice
 			total++
+			pivots, _ := h.pivotRepo.ListByTransaction(t.IdTransaction)
+			for _, p := range pivots {
+				totalProducts += p.Quantity
+				if minOrder == 0 || t.TotalPrice < minOrder {
+					minOrder = t.TotalPrice
+				}
+				if t.TotalPrice > maxOrder {
+					maxOrder = t.TotalPrice
+				}
+				a := perItem[p.IdItem]
+				if a == nil {
+					a = &agg{}
+					perItem[p.IdItem] = a
+				}
+				a.qty += p.Quantity
+				a.revenue += float64(p.Quantity) * p.Price
+			}
 		}
 	}
 
-	resp := dto.TodayReportResponse{Date: now.Format("2006-01-02"), Total: total, Sum: sum, Items: items}
+	top := make([]dto.TopItem, 0, len(perItem))
+	for id, a := range perItem {
+		it, err := h.itemsRepo.GetByID(id)
+		if err != nil {
+			continue
+		}
+		top = append(top, dto.TopItem{IdItem: it.IdItem, ItemName: it.ItemName, ImageUrl: it.ImageUrl, QuantitySold: a.qty, Revenue: a.revenue})
+	}
+	if len(top) > 1 {
+		for i := 0; i < len(top)-1; i++ {
+			for j := i + 1; j < len(top); j++ {
+				if top[j].QuantitySold > top[i].QuantitySold || (top[j].QuantitySold == top[i].QuantitySold && top[j].Revenue > top[i].Revenue) {
+					top[i], top[j] = top[j], top[i]
+				}
+			}
+		}
+		if len(top) > 5 {
+			top = top[:5]
+		}
+	}
+	aov := 0.0
+	avgItems := 0.0
+	if total > 0 {
+		aov = sum / float64(total)
+		avgItems = float64(totalProducts) / float64(total)
+	}
+
+	resp := dto.TodayReportResponse{Date: now.Format("2006-01-02"), Total: total, Sum: sum, TotalProductsSold: totalProducts, AverageOrderValue: aov, MinOrderValue: minOrder, MaxOrderValue: maxOrder, AvgItemsPerTx: avgItems, TopItems: top, Items: items}
 	c.JSON(http.StatusOK, helper.SuccessResponse("OK", resp))
 }
 
-// reportTodaySummary returns today's revenue (sum), total transactions, and total products sold.
 func (h *ReportHandler) reportTodaySummary(c *gin.Context) {
 	now := time.Now()
 	y, m, d := now.Date()
@@ -164,6 +320,13 @@ func (h *ReportHandler) reportTodaySummary(c *gin.Context) {
 	totalTx := 0
 	var sum float64
 	totalProducts := 0
+	var minOrder float64 = 0
+	var maxOrder float64 = 0
+	type agg struct {
+		qty     int
+		revenue float64
+	}
+	perItem := map[string]*agg{}
 
 	for _, t := range list {
 		ts := t.Timestamp
@@ -174,11 +337,52 @@ func (h *ReportHandler) reportTodaySummary(c *gin.Context) {
 		if ty == y && tm == m && td == d {
 			totalTx++
 			sum += t.TotalPrice
+			if minOrder == 0 || t.TotalPrice < minOrder {
+				minOrder = t.TotalPrice
+			}
+			if t.TotalPrice > maxOrder {
+				maxOrder = t.TotalPrice
+			}
 			pivots, _ := h.pivotRepo.ListByTransaction(t.IdTransaction)
 			for _, p := range pivots {
 				totalProducts += p.Quantity
+				a := perItem[p.IdItem]
+				if a == nil {
+					a = &agg{}
+					perItem[p.IdItem] = a
+				}
+				a.qty += p.Quantity
+				a.revenue += float64(p.Quantity) * p.Price
 			}
 		}
+	}
+
+	top := make([]dto.TopItem, 0, len(perItem))
+	for id, a := range perItem {
+		it, err := h.itemsRepo.GetByID(id)
+		if err != nil {
+			continue
+		}
+		top = append(top, dto.TopItem{IdItem: it.IdItem, ItemName: it.ItemName, ImageUrl: it.ImageUrl, QuantitySold: a.qty, Revenue: a.revenue})
+	}
+	if len(top) > 1 {
+		for i := 0; i < len(top)-1; i++ {
+			for j := i + 1; j < len(top); j++ {
+				if top[j].QuantitySold > top[i].QuantitySold || (top[j].QuantitySold == top[i].QuantitySold && top[j].Revenue > top[i].Revenue) {
+					top[i], top[j] = top[j], top[i]
+				}
+			}
+		}
+		if len(top) > 5 {
+			top = top[:5]
+		}
+	}
+
+	aov := 0.0
+	avgItems := 0.0
+	if totalTx > 0 {
+		aov = sum / float64(totalTx)
+		avgItems = float64(totalProducts) / float64(totalTx)
 	}
 
 	resp := dto.TodaySummaryResponse{
@@ -186,6 +390,11 @@ func (h *ReportHandler) reportTodaySummary(c *gin.Context) {
 		TotalTransactions: totalTx,
 		TotalProductsSold: totalProducts,
 		SumTotalPrice:     sum,
+		AverageOrderValue: aov,
+		MinOrderValue:     minOrder,
+		MaxOrderValue:     maxOrder,
+		AvgItemsPerTx:     avgItems,
+		TopItems:          top,
 	}
 	c.JSON(http.StatusOK, helper.SuccessResponse("OK", resp))
 }

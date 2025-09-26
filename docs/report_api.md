@@ -13,7 +13,7 @@ Authentication: Not required (read-only). If you need to protect them, put behin
 
 - Method: GET
 - Path: `/api/reports/:bulan/:tahun`
-- Description: Returns all transactions in the specified month (1-12) and year (>= 1970), with total count and sum of total_price.
+- Description: Returns all transactions in the specified month (1-12) and year (>= 1970), with total count, revenue sum, total products sold, AOV, min/max order, average items/transaction, and top items.
 
 Request
 - Path Params:
@@ -36,6 +36,14 @@ Responses
     "year": 2025,
     "total_transactions": 3,
     "sum_total_price": 450000,
+    "total_products_sold": 12,
+    "average_order_value": 150000,
+    "min_order_value": 50000,
+    "max_order_value": 250000,
+    "average_items_per_transaction": 4,
+    "top_items": [
+      { "id_item": "item-uuid-1", "item_name": "Product A", "image_url": "https://.../a.jpg", "quantity_sold": 7, "revenue": 210000 }
+    ],
     "transactions": [
       {
         "id_transaction": "tx-uuid-1",
@@ -62,7 +70,7 @@ Responses
 
 - Method: GET
 - Path: `/api/reports/today`
-- Description: Returns transactions that occurred today (server local time), with total count and sum.
+- Description: Returns today's transactions with total count, revenue sum, total products sold, AOV, min/max order, average items/transaction, and top items.
 
 Example
 ```
@@ -79,6 +87,14 @@ Responses
     "date": "2025-09-26",
     "total_transactions": 2,
     "sum_total_price": 300000,
+    "total_products_sold": 6,
+    "average_order_value": 150000,
+    "min_order_value": 100000,
+    "max_order_value": 200000,
+    "average_items_per_transaction": 3,
+    "top_items": [
+      { "id_item": "item-uuid-1", "item_name": "Product A", "image_url": "https://.../a.jpg", "quantity_sold": 4, "revenue": 160000 }
+    ],
     "transactions": [
       {
         "id_transaction": "tx-uuid-2",
@@ -101,7 +117,7 @@ Responses
 
 - Method: GET
 - Path: `/api/reports/date/:dd/:mm/:yyyy`
-- Description: Returns transactions for the exact calendar date.
+- Description: Returns transactions for the exact calendar date with total count, revenue sum, total products sold, AOV, min/max order, average items/transaction, and top items.
 
 Request
 - Path Params:
@@ -124,6 +140,14 @@ Responses
     "date": "2025-09-26",
     "total_transactions": 1,
     "sum_total_price": 150000,
+    "total_products_sold": 2,
+    "average_order_value": 150000,
+    "min_order_value": 150000,
+    "max_order_value": 150000,
+    "average_items_per_transaction": 2,
+    "top_items": [
+      { "id_item": "item-uuid-3", "item_name": "Product C", "image_url": "https://.../c.jpg", "quantity_sold": 2, "revenue": 150000 }
+    ],
     "transactions": [
       {
         "id_transaction": "tx-uuid-3",
@@ -146,11 +170,11 @@ Responses
 
 ---
 
-## 4) Today Summary (Revenue, Counts)
+## 4) Today Summary (Revenue, Counts, Insights)
 
 - Method: GET
 - Path: `/api/reports/today/summary`
-- Description: Returns today's revenue (sum_total_price), total transactions, and total products sold.
+- Description: Returns today's revenue (sum_total_price), total transactions, total products sold, average order value (AOV), min/max order value, average items per transaction, and top items.
 
 Example
 ```
@@ -167,7 +191,15 @@ Responses
     "date": "2025-09-26",
     "total_transactions": 5,
     "total_products_sold": 18,
-    "sum_total_price": 750000
+    "sum_total_price": 750000,
+    "average_order_value": 150000,
+    "min_order_value": 50000,
+    "max_order_value": 300000,
+    "average_items_per_transaction": 3.6,
+    "top_items": [
+      { "id_item": "item-uuid-1", "item_name": "Product A", "image_url": "https://.../a.jpg", "quantity_sold": 10, "revenue": 250000 },
+      { "id_item": "item-uuid-2", "item_name": "Product B", "image_url": "https://.../b.jpg", "quantity_sold": 8, "revenue": 180000 }
+    ]
   }
 }
 ```
@@ -185,6 +217,12 @@ Monthly Response
   "year": 2025,
   "total_transactions": 0,
   "sum_total_price": 0,
+  "total_products_sold": 0,
+  "average_order_value": 0,
+  "min_order_value": 0,
+  "max_order_value": 0,
+  "average_items_per_transaction": 0,
+  "top_items": [],
   "transactions": [
     { "id_transaction": "", "total_price": 0, "buyer_contact": "", "timestamp": "" }
   ]
@@ -197,6 +235,12 @@ Today/Exact Date Response
   "date": "YYYY-MM-DD",
   "total_transactions": 0,
   "sum_total_price": 0,
+  "total_products_sold": 0,
+  "average_order_value": 0,
+  "min_order_value": 0,
+  "max_order_value": 0,
+  "average_items_per_transaction": 0,
+  "top_items": [],
   "transactions": [
     { "id_transaction": "", "total_price": 0, "buyer_contact": "", "timestamp": "" }
   ]
@@ -206,3 +250,4 @@ Today/Exact Date Response
 ## Notes
 - These endpoints currently perform in-memory filtering on paginated results; for large datasets, consider DB-side date range queries.
 - Timestamps are ISO 8601 strings.
+- Top items are capped at 5 and sorted by quantity sold (desc) then revenue (desc).

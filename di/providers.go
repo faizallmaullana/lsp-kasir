@@ -75,8 +75,8 @@ func ProvideItemsHandler(cfg *conf.Config, items services.ItemsService) *handler
 	return handler.NewItemsHandler(cfg, items)
 }
 
-func ProvideReportHandler(cfg *conf.Config, tx services.TransactionsService, pivot repo.PivotItemsToTransactionsRepo) *handler.ReportHandler {
-	return handler.NewReportHandler(cfg, tx, pivot)
+func ProvideReportHandler(cfg *conf.Config, tx services.TransactionsService, pivot repo.PivotItemsToTransactionsRepo, items repo.ItemsRepo) *handler.ReportHandler {
+	return handler.NewReportHandler(cfg, tx, pivot, items)
 }
 
 func ProvideTransactionsHandler(cfg *conf.Config, tx services.TransactionsService, items repo.ItemsRepo, pivot repo.PivotItemsToTransactionsRepo) *handler.TransactionsHandler {
