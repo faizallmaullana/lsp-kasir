@@ -2,7 +2,10 @@ package handler
 
 import (
 	"io"
+	"mime"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"faizalmaulana/lsp/conf"
 	"faizalmaulana/lsp/helper"
@@ -28,6 +31,7 @@ func (h *ImagesHandler) Register(rr *gin.RouterGroup) {
 	rg.POST("/upload/base64", middleware.JWTMiddleware(h.cfg), h.uploadBase64)
 	rg.GET(":id", h.downloadBlob)
 	rg.GET(":id/base64", h.downloadBase64)
+	rg.GET("/file/:name", h.downloadBlobByName)
 	rg.DELETE(":id", middleware.JWTMiddleware(h.cfg), h.delete)
 }
 
@@ -97,4 +101,23 @@ func (h *ImagesHandler) delete(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, helper.SuccessResponse("deleted", gin.H{"id": id}))
+}
+
+// downloadBlobByName serves a file directly from storages/images using the given filename.
+func (h *ImagesHandler) downloadBlobByName(c *gin.Context) {
+	name := c.Param("name")
+	// prevent path traversal: only allow base filename
+	name = filepath.Base(name)
+	base := filepath.Join("storages", "images")
+	full := filepath.Join(base, name)
+	data, err := os.ReadFile(full)
+	if err != nil {
+		c.JSON(http.StatusNotFound, helper.NotFoundResponse("image not found"))
+		return
+	}
+	ct := mime.TypeByExtension(filepath.Ext(name))
+	if ct == "" {
+		ct = "application/octet-stream"
+	}
+	c.Data(http.StatusOK, ct, data)
 }

@@ -56,11 +56,15 @@ func (s *imagesService) UploadBase64(fileName, contentType, b64 string) (string,
 }
 
 func (s *imagesService) GetBlob(id string) (*entity.Images, error) {
+	fmt.Println("GetBlob id:", id)
 	meta, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
-	fullPath := filepath.Join("storages", "images", meta.FileName)
+
+	fmt.Println(meta.FileName)
+
+	fullPath := filepath.Join("storages", "images", id)
 	data, err := os.ReadFile(fullPath)
 	if err != nil {
 		return nil, err
