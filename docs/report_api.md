@@ -3,7 +3,7 @@
 ## Overview
 The Report API provides read-only endpoints to retrieve transaction reports by month/year, for today, and for an exact date. These endpoints aggregate transactions and return totals and line items.
 
-Base prefix: `/api/report`
+Base prefix: `/api/reports`
 
 Authentication: Not required (read-only). If you need to protect them, put behind JWT later.
 
@@ -12,7 +12,7 @@ Authentication: Not required (read-only). If you need to protect them, put behin
 ## 1) Report by Month and Year
 
 - Method: GET
-- Path: `/api/report/:bulan/:tahun`
+- Path: `/api/reports/:bulan/:tahun`
 - Description: Returns all transactions in the specified month (1-12) and year (>= 1970), with total count and sum of total_price.
 
 Request
@@ -22,7 +22,7 @@ Request
 
 Example
 ```
-GET /api/report/9/2025
+GET /api/reports/9/2025
 ```
 
 Responses
@@ -61,12 +61,12 @@ Responses
 ## 2) Report for Today
 
 - Method: GET
-- Path: `/api/report/today`
+- Path: `/api/reports/today`
 - Description: Returns transactions that occurred today (server local time), with total count and sum.
 
 Example
 ```
-GET /api/report/today
+GET /api/reports/today
 ```
 
 Responses
@@ -100,7 +100,7 @@ Responses
 ## 3) Report by Exact Date (dd/mm/yyyy)
 
 - Method: GET
-- Path: `/api/report/date/:dd/:mm/:yyyy`
+- Path: `/api/reports/date/:dd/:mm/:yyyy`
 - Description: Returns transactions for the exact calendar date.
 
 Request
@@ -111,7 +111,7 @@ Request
 
 Example
 ```
-GET /api/report/date/26/09/2025
+GET /api/reports/date/26/09/2025
 ```
 
 Responses
@@ -149,12 +149,12 @@ Responses
 ## 4) Today Summary (Revenue, Counts)
 
 - Method: GET
-- Path: `/api/report/today/summary`
+- Path: `/api/reports/today/summary`
 - Description: Returns today's revenue (sum_total_price), total transactions, and total products sold.
 
 Example
 ```
-GET /api/report/today/summary
+GET /api/reports/today/summary
 ```
 
 Responses
