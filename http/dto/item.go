@@ -7,8 +7,8 @@ type CreateItemRequest struct {
 	Price       float64 `json:"price" binding:"required"`
 	Description string  `json:"description"`
 	ImageUrl    string  `json:"image_url"`
-	ImageBase64 string  `json:"image_base64"` // optional: when provided, will be saved to storages/images and file name stored
-	ImageType   string  `json:"image_type"`   // optional: MIME type like image/png when using base64
+	ImageBase64 string  `json:"image_base64"`
+	ImageType   string  `json:"image_type"`  
 }
 
 type UpdateItemRequest struct {

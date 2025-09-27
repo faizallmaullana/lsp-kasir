@@ -37,16 +37,13 @@ func (h *UsersHandler) Register(rr *gin.RouterGroup) {
 	rg.DELETE("/:id", middleware.JWTMiddleware(h.cfg), h.deleteProfile)
 	rg.PUT("/email", middleware.JWTMiddleware(h.cfg), h.updateEmail)
 
-	// Admin-only user management
+	// Admin-only 
 	ug := rr.Group("/users")
 	ug.POST("", middleware.JWTMiddleware(h.cfg), h.createUserWithProfileAdmin)
 	ug.GET("", middleware.JWTMiddleware(h.cfg), h.listUsers)
 }
 
-// createUserWithProfileAdmin allows admin to create a new user along with a primary profile
-// Body: { email, password, role(optional), profile: { name, contact, address, image_url } }
 func (h *UsersHandler) createUserWithProfileAdmin(c *gin.Context) {
-	// Auth + role check
 	claimsVal, exists := c.Get("claims")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
@@ -59,7 +56,6 @@ func (h *UsersHandler) createUserWithProfileAdmin(c *gin.Context) {
 	}
 	roleStr, _ := claims["role"].(string)
 	if strings.ToLower(roleStr) != "admin" {
-		// treat as unauthorized for now (no dedicated Forbidden helper)
 		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
 		return
 	}
@@ -80,7 +76,6 @@ func (h *UsersHandler) createUserWithProfileAdmin(c *gin.Context) {
 		return
 	}
 
-	// Create user
 	uid := helper.Uuid()
 	u := &entity.Users{
 		IdUser:   uid,
@@ -94,7 +89,6 @@ func (h *UsersHandler) createUserWithProfileAdmin(c *gin.Context) {
 		return
 	}
 
-	// Create profile
 	prof := &entity.Profiles{
 		IdProfile: helper.Uuid(),
 		IdUser:    createdUser.IdUser,
@@ -105,13 +99,11 @@ func (h *UsersHandler) createUserWithProfileAdmin(c *gin.Context) {
 	}
 	createdProfile, err := h.profile.Create(prof)
 	if err != nil {
-		// best-effort rollback user creation
 		_ = h.Users.Delete(createdUser.IdUser)
 		c.JSON(http.StatusInternalServerError, helper.InternalErrorResponse("failed to create profile"))
 		return
 	}
 
-	// Build safe response (omit password)
 	resp := gin.H{
 		"user": gin.H{
 			"id_user":    createdUser.IdUser,
@@ -270,10 +262,7 @@ func (h *UsersHandler) updateEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, helper.SuccessResponse("email updated", gin.H{"email": updated.Email}))
 }
 
-// listUsers returns a paginated list of users (admin only)
-// Query params: count (default 10, max 100), page (default 1)
 func (h *UsersHandler) listUsers(c *gin.Context) {
-	// Auth + role check
 	claimsVal, exists := c.Get("claims")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, helper.UnauthorizedResponse())
@@ -290,7 +279,6 @@ func (h *UsersHandler) listUsers(c *gin.Context) {
 		return
 	}
 
-	// Parse pagination
 	countQ := c.Query("count")
 	pageQ := c.Query("page")
 	count, _ := strconv.Atoi(countQ)
@@ -302,7 +290,6 @@ func (h *UsersHandler) listUsers(c *gin.Context) {
 		return
 	}
 
-	// Omit passwords in response
 	out := make([]gin.H, 0, len(users))
 	for _, u := range users {
 		out = append(out, gin.H{

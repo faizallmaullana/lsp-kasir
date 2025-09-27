@@ -16,8 +16,15 @@ import (
 )
 
 // Hallo This is Faizal Maulana Cashier system
+// the system here use for my certification as programmer 
+// the system contain http and repository as main features (domain driven i think)
+// it use dependency injection with google/wire so it use object oriented programming pattern
+// it use gorm as orm and postgres as database
+// it use gin as http framework
+// thanks to openai that help me a lot to assist me so i can finist this project faster
 
 func main() {
+	// This is only use when i need to seed the database
 	seedFlag := flag.Bool("seed", false, "run database seeders and exit")
 	flag.Parse()
 

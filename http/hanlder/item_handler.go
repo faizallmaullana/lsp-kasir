@@ -73,7 +73,6 @@ func (h *ItemsHandler) create(c *gin.Context) {
 	}
 
 	fmt.Println(c.Request.RequestURI)
-	// handle base64 image upload if provided
 	imageFileName := req.ImageUrl
 	if h.images != nil && req.ImageBase64 != "" {
 		_, stored, err := h.images.UploadBase64(req.ItemName, req.ImageType, req.ImageBase64)
@@ -124,7 +123,6 @@ func (h *ItemsHandler) update(c *gin.Context) {
 		existing.ImageUrl = *req.ImageUrl
 	}
 	if h.images != nil && req.ImageBase64 != nil && *req.ImageBase64 != "" {
-		// use provided type or guess from existing
 		ct := ""
 		if req.ImageType != nil {
 			ct = *req.ImageType

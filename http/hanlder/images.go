@@ -103,10 +103,8 @@ func (h *ImagesHandler) delete(c *gin.Context) {
 	c.JSON(http.StatusOK, helper.SuccessResponse("deleted", gin.H{"id": id}))
 }
 
-// downloadBlobByName serves a file directly from storages/images using the given filename.
 func (h *ImagesHandler) downloadBlobByName(c *gin.Context) {
 	name := c.Param("name")
-	// prevent path traversal: only allow base filename
 	name = filepath.Base(name)
 	base := filepath.Join("storages", "images")
 	full := filepath.Join(base, name)

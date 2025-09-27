@@ -65,12 +65,10 @@ func (h *TransactionsHandler) get(c *gin.Context) {
 		return
 	}
 	pivots, _ := h.pivotRepo.ListByTransaction(id)
-	// enrich each pivot with item details
 	details := make([]dto.TransactionItemDetail, 0, len(pivots))
 	for _, p := range pivots {
 		it, err := h.itemsRepo.GetByID(p.IdItem)
 		if err != nil {
-			// skip missing items, but continue
 			continue
 		}
 		details = append(details, dto.TransactionItemDetail{

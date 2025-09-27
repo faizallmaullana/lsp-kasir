@@ -56,7 +56,6 @@ func (s *usersService) GetAll(count, page int) ([]entity.Users, error) {
 	return out, nil
 }
 
-// GetByID returns a user by id (with basic related data if already preloaded by repo).
 func (s *usersService) GetByID(id string) (*entity.Users, error) {
 	u, err := s.users.GetByID(id)
 	if err != nil {

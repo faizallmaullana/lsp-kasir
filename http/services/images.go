@@ -14,10 +14,10 @@ import (
 )
 
 type ImagesService interface {
-	UploadBlob(fileName, contentType string, data []byte) (string, string, error) // returns (id, storedFilename)
-	UploadBase64(fileName, contentType, b64 string) (string, string, error)       // returns (id, storedFilename)
+	UploadBlob(fileName, contentType string, data []byte) (string, string, error) 
+	UploadBase64(fileName, contentType, b64 string) (string, string, error)      
 	GetBlob(id string) (*entity.Images, error)
-	GetBase64(id string) (string, string, string, error) // id, contentType, base64
+	GetBase64(id string) (string, string, string, error) 
 	Delete(id string) error
 }
 

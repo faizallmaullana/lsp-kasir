@@ -34,7 +34,6 @@ func SeedAdmin(users repo.UsersRepo, profiles repo.ProfilesRepo) error {
 
 	}
 
-	// Create default admin profile
 	p := &entity.Profiles{
 		IdProfile: helper.Uuid(),
 		IdUser:    u.IdUser,
